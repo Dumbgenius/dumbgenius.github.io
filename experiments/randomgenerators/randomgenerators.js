@@ -38,7 +38,8 @@ function generateTechnobabble() {
 		"dark matter",
 		"titanium",
 		"red matter",
-		"star alloy"
+		"star alloy", 
+		"tritium"
 	];
 	particle_thing=[
 		"shield",
@@ -84,6 +85,13 @@ function generateTechnobabble() {
 		"plasmic", 
 		"ionised",
 		"","",""
+	];
+	shape=[
+		"cube",
+		"sphere",
+		"dome",
+		"container",
+		"tesseract"
 	]
 	
 	sentence=[
