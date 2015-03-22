@@ -77,22 +77,31 @@ function generateTechnobabble() {
 		"ultra-",
 		"maxi-"
 	];
+	state=[
+		"solid", "solid", "solid",
+		"liquid",
+		"gaseous",
+		"plasmic", 
+		"ionised",
+		"","",""
+	]
 	
 	sentence=[
 		"Quickly, {verb} the {particle} {particle_thing} - they have {adjective} {object}s!",
 		"It looks like some kind of {combiner}{adjective} {object}.",
 		"They've got {particle} {combiner}{particle_thing}s! We need to {verb} the {adjective} {object}!",
-		"It's simple - the {object} sends {particle}s into a block of solid {material}, causing the {adjective} {particle_thing} to {verb}."
+		"It's simple - the {object} sends {particle}s into a cube filled with {state} {material}, causing the {adjective} {particle_thing} to {verb}."
 	];
 	
-	var out=choose(sentence).format(
-	{particle:choose(particle), 
+	var out=choose(sentence).format({
+	particle:choose(particle), 
 	material:choose(material), 
 	particle_thing:choose(particle_thing),
 	verb:choose(verb),
 	object:choose(object),
 	adjective:choose(adjective),
-	combiner:choose(combiner)
+	combiner:choose(combiner),
+	state:choose(state)
 	});
 
 	return out
