@@ -98,7 +98,7 @@ function generateTechnobabble() {
 		"Quickly, {verb} the {particle} {particle_thing} - they have {adjective} {object}s!",
 		"It looks like some kind of {combiner}{adjective} {object}.",
 		"They've got {particle} {combiner}{particle_thing}s! We need to {verb} the {adjective} {object}!",
-		"It's simple - the {object} sends {particle}s into a cube filled with {state} {material}, causing the {adjective} {particle_thing} to {verb}."
+		"It's simple - the {object} sends {particle}s into a {shape} filled with {state} {material}, causing the {adjective} {particle_thing} to {verb}."
 	];
 	
 	var out=choose(sentence).format({
@@ -109,7 +109,8 @@ function generateTechnobabble() {
 	object:choose(object),
 	adjective:choose(adjective),
 	combiner:choose(combiner),
-	state:choose(state)
+	state:choose(state),
+	shape:choose(shape)
 	});
 
 	return out
