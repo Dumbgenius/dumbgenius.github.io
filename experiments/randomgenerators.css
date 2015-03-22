@@ -1,0 +1,32 @@
+body {
+	background-color:#FFEA95;
+}
+
+h1 {
+	font-family:Impact;
+	font-size:72px;
+	text-align:center;
+	line-height:70%;
+	color:#0f0f0f
+}
+
+h2 {
+	font-family:Impact;
+	font-size:42px;
+	text-align:center;
+	line-height:70%;
+	color:#0f0f0f;
+}
+
+.box {
+	position: absolute;
+	text-align:center;
+	left:25%;
+	width:50%;
+	height:auto;
+	border: 2px solid black;
+}
+
+p {
+	display:inline;
+}
