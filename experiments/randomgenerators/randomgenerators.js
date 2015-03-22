@@ -96,7 +96,7 @@ function generateTechnobabble() {
 	
 	sentence=[
 		"Quickly, {verb} the {particle} {particle_thing} - they have {adjective} {object}s!",
-		"It looks like some kind of {combiner}{adjective} {object}.",
+		"It looks like some kind of {combiner}{adjective} {object}, powered by {particle}s.",
 		"They've got {particle} {combiner}{particle_thing}s! We need to {verb} the {adjective} {object}!",
 		"It's simple - the {object} sends {particle}s into a {shape} filled with {state} {material}, causing the {adjective} {particle_thing} to {verb}."
 	];
