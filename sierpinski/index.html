@@ -1,0 +1,29 @@
+<!DOCTYPE hmtl>
+
+<html>
+<head>
+	<title>Sierpinski's Pattern Generator</title>
+	<script type="text/javascript" src="main.js"></script>
+	<link rel=stylesheet href="style.css">
+</head>
+
+<body>
+	<center>
+		<h1>Sierpinski's Pattern Generator</h1>
+	
+		<canvas width=420 height=420 id="mainCanvas"></canvas> <br><br>
+		<form><input type=submit value="Generate!" id=confirm onclick="return generate()"></form>  <button id=stop onclick="stop()">Stop</button> <br>
+		Speed (1-100):<input type="number" id="speed" min="1" max=100 value=100 step=1> <br>
+		Sides (<3):<input type="number" id="sides" min=3 value=3 step=1> <br>
+		Fraction (0-1):<input type="number" id="fraction" min=0 max=1 value=0.5 step=0.1> <br>
+		<p id="error" class="error"> <br>
+	</center>
+
+	<script type="text/javascript">
+		canvas=get("mainCanvas");
+		ctx=canvas.getContext("2d");
+		ctx.fillStyle="#FFFFFF";
+		ctx.fillRect(0, 0, canvas.height, canvas.width);
+	</script>
+</body>
+</html>

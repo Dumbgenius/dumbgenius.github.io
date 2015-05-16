@@ -1,0 +1,19 @@
+.error {
+	color: #FF1111;
+	display: inline;
+}
+
+canvas {
+	outline: #888888 solid 3px
+}
+
+html, body {
+	width:  100%;
+	height: 100%;
+	margin: 0px;
+	background-color:#AEFD9B;
+}
+
+form {
+    display:inline;
+}
