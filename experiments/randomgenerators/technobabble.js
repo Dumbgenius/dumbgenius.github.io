@@ -15,3 +15,12 @@ function chooseWeighted(list) {
 }
 
 function parseGenerator() {}
+
+function Word(text, plural, infinitive, ing) {
+    this.text=text
+    this.plural=plural
+    this.infinitive=infinitive
+    this.ing=ing
+}
+
+
