@@ -1,0 +1,22 @@
+body {
+    background-color:#202020;
+}  
+
+h1, h2, h3 {
+    font-family:Comic Sans MS;
+    text-align:center;
+    color:#f1f1f1;
+    display:inline;
+}
+
+h1 {
+    font-size:64px;
+}
+
+h2 {
+    font-size:48px;
+}
+
+h3 {
+    font-size:128px;
+}
