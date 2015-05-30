@@ -2,7 +2,7 @@ body {
     background-color:#202020;
 }  
 
-h1, h2, h3 {
+h1, h2{
     font-family:Comic Sans MS;
     text-align:center;
     color:#f1f1f1;
@@ -17,6 +17,17 @@ h2 {
     font-size:48px;
 }
 
-h3 {
-    font-size:128px;
+a {
+	font-family:consolas;
+	size:24px;
+	text-decoration:none;
+}
+
+a:link, a:visited {
+	color:#207020;
+}
+
+a:hover {
+	color:#409040;
+	font-weight: bold
 }

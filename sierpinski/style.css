@@ -17,3 +17,12 @@ html, body {
 form {
     display:inline;
 }
+
+h1 {
+	font-family:Calibri;
+}
+
+p {
+	font-family:Calibri;
+	display:inline;
+}
