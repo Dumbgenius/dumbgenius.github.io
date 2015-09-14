@@ -39,7 +39,8 @@ function generateTechnobabble() {
 		"titanium",
 		"red matter",
 		"star alloy", 
-		"tritium"
+		"tritium",
+		"vibranium"
 	];
 	particle_thing=[
 		"shield",
@@ -48,13 +49,18 @@ function generateTechnobabble() {
 		"torpedo",
 		"missile",
 		"blaster",
-		"capacitor"
+		"capacitor",
+		"laser",
+		"accelerator"
 	];
 	verb=[
 		"ionize",
 		"enable",
 		"activate",
-		"overcharge"
+		"overcharge",
+		"charge",
+		"engage",
+		"start",
 	];
 	object=[
 		"gate",
