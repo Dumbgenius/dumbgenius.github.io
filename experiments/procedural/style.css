@@ -1,3 +1,19 @@
 canvas {
-	border: 2px solid black;
+
+}
+
+#header {
+	text-align:center;
+    padding:5px;
+}
+
+#canvas {
+	text-align:center;
+	width:50%;
+	float:left;
+}
+
+#config {
+	width:50%;
+	float:right;
 }

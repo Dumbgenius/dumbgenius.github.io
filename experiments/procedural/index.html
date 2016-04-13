@@ -6,11 +6,29 @@
 </head>
 
 <body>
-	<center>
-		<h1>Procedural Generation</h1>
-		<canvas width=300 height=300></canvas>
+		<div id=header>
+			<h1>Procedural Generation using Cellular Automata</h1>
+		</div>
+		<div id=canvas>
+			<canvas width=500 height=500 id="mainCanvas"></canvas>
+		</div>
+		<div id=config>
+		<input type=text id="seed"> <button id="randomSeed">Random seed!</button>
 		<br>
-		<button id="generate">Generate!</button>
+		<br><input type=range id="steps" min=0 max=11 value=2> Steps: <span id="stepsOut"></span>
+		<br><input type=range id="birthLimit" min=0 max=8 value=4> Birth Limit: <span id="birthLimitOut"></span>
+		<br><input type=range id="starveLimit" min=0 max=8 value=3> Starve Limit: <span id="starveLimitOut"></span>
+		<br><input type=range id="overpopLimit" min=0 max=8 value=8> Overpopulation Limit: <span id="overpopLimitOut"></span>
+		<br><input type=range id="startChance" min=0 max=20 value=8> Start Chance: <span id="startChanceOut"></span>%
+		<br><input type=checkbox id="liveUpdateMap" checked=true>Live Map Update
+		<br><button onclick="updateMap()">Update Map</button>
+		<br>
+		<br>(<span id=x>0</span>, <span id=y>0</span>): Region <span id=region>0</span> (Size: <span id=size>-1</span>)
+		<br><input type=checkbox id="colourMap" checked=false>Colour Map
+		</div>
 	<center>
+	
+	<script src="http://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.3.10/seedrandom.min.js"></script>
+	<script src="cave.js"></script>
 </body>
 </html>
