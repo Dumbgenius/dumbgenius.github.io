@@ -31,13 +31,7 @@ p {
 }
 
 a {
-	color:#10d010;
-	font-family:courier;
 	text-decoration:none;
-}
-
-a:hover {
-	color:#10ff10;
 }
 
 td {
@@ -56,7 +50,7 @@ td {
 	transition: all 0.3s ease;
 	cursor: pointer;
 	border-radius: 50%;
-	font-size:32px;
+	text-decoration:none;
 }
 
 .nicesquare:hover {
@@ -74,4 +68,27 @@ span.centered {
 	vertical-align: middle;
 	line-height: normal;
 	display:inline-block;
+}
+
+#caves {
+	background-color:#442233;
+	font-family: impact;
+	font-size:52px;
+	color:#10d010;
+}
+
+#caves:hover {
+	font-size: 56px;
+}
+
+#generators {
+	background-color:#000066;
+	font-family:agency fb;
+	font-size:52px;
+	font-weight:bold;
+	color:#DDDD22;
+}
+
+#generators:hover {
+	font-size:56px;
 }
