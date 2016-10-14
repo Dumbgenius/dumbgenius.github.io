@@ -92,3 +92,15 @@ span.centered {
 #generators:hover {
 	font-size:56px;
 }
+
+#chemistry {
+	background-color:#33bb00;
+	font-family:arial;
+	font-size:45px;
+	font-weight:bold;
+	color:#bb0088;
+}
+
+#chemistry:hover {
+	font-size:50px;
+}
