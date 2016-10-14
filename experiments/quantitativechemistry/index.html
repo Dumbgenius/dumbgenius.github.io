@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>GCSE Quantitative Analysis</title>
+	<!-- <script src="jquery-3.1.1.min.js" type="text/javascript"></script> -->
+	<script src="main.js" type="text/javascript"></script>
+	<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+	<div class="title" id="title">GCSE Quantitative Analysis Solver</div><br>
+	<div class="main">
+		<div class="inputs" onkeypress="checkEnter(event)">
+			Compound 1: <input type="number" id="chemVolume1" value=100>
+			<select id="chemVolumeType1">
+				<option value=0.001>cm^3</option>
+				<option value=1>dm^3</option>
+			</select> of
+			<input type="text" id="chemName1" value="HCl"> 
+			at a known concentration of <input type="number" id="chemConcentration1" value=0.1>
+			<select id="chemConcentrationType1">
+				<option value="mol/dm3">mol/dm^3</option>
+				<option value="g/dm3">g/dm^3</option>
+			</select>
+			<br>
+			
+			Compound 2: <input type="nunmber" id="chemVolume2" value=50>
+			<select id="chemVolumeType2">
+				<option value=0.001>cm^3</option>
+				<option value=1>dm^3</option>
+			</select> of
+			<input type="text" id="chemName2" value="NaOH"> <br>
+			
+			Reacting ratio Compound 1 : Compound 2 = <input type="number" id="chemRatio1" class="ratio" value=1>:<input type="number" id="chemRatio2" class="ratio" value=1><br>
+			
+			<button onclick="solve()" id="solve">Go!</button>
+		</div>
+		<div class="outputs">
+			<p id=output></p>
+		</div>
+		<br>
+	</div>
+	<div class="about">
+		<p>
+		<div class=title>About</div>
+		This solver can solve most (read: probably some) GCSE quantitative analysis titration questions without too much issue. 
+		<br><span class="warning">Warning: Does not work with formulae with brackets!</span> 
+		<br>For formulae with brackets, eg. <span class="formula">Ca(OH)2</span>, type them as <span class="formula">CaOHOH</span> or <span class="formula">CaO2H2</span>. 
+		<br>Adding bracket parsing is on the list of things to do.
+		</p>
+	</div>
+	<div class="otherstuff">
+		<a href="../">Back to /experiments</a><br>
+		In case of errors, please contact me at <a href="mailto:handsjacob@gmail.com">handsjacob@gmail.com</a>, or <a href="https://github.com/Dumbgenius/dumbgenius.github.io/issues">create an issue in the GitHub repo.</a>
+	</div>
+</body>
+</html>
