@@ -153,6 +153,11 @@ function drawMap(map) {
 	}
 }
 
+document.getElementById("randomSeed").addEventListener("click", function() {
+	document.getElementById("seed").value = randomString(Math.ceil(Math.random()*8)+4);
+	updateAll();
+});
+
 function updateAll() {
 	if (document.getElementById("liveUpdateMap").checked) {
 		updateMap();
