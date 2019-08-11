@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Procedural Maze Generation</title>
+	<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+		<div id=header>
+			<h1>Procedural Generation using ~~science~~</h1>
+		</div>
+		<div id=canvas>
+			<canvas width=500 height=500 id="mainCanvas"></canvas>
+		</div>
+		<div id=config>
+		<input type=text id="seed"> <button id="randomSeed">Random seed!</button>
+		<br>
+		<br><input type=checkbox id="liveUpdateMap" checked=true>Live Map Update
+		<br><button onclick="updateMap()">Update Map</button>
+		<br>
+		</div>
+	<center>
+	
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.3.10/seedrandom.min.js"></script>
+	<script src="mazegen.js"></script>
+</body>
+</html>
