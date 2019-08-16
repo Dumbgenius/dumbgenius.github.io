@@ -1,13 +1,3 @@
-function arrayContains(arr, val) {
-	val = JSON.stringify(val)
-	for (var i=0; i<arr.length; i+=1) {
-		if (JSON.stringify(arr[i]) == val) {
-			return true
-		}
-	}
-	return false
-}
-
 function randomString(len, rng = Math.random) {
     var text = "";
     var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -30,17 +20,6 @@ function shuffled(l, rng = Math.random) {
 function pickRandom(list, rng = Math.random) {
 	return list[Math.floor(rng()*list.length)]
 }
-
-MAP_WIDTH = 20;
-MAP_HEIGHT = 20;
-GENERATION_STEP_DELAY = 40
-
-canvas=document.getElementById("mainCanvas");
-WALL_COLOUR = "#000000"
-VISITED_COLOUR = "#FFFFFF"
-UNVISITED_COLOUR = "#CCCCCC"
-IN_LIST_COLOUR = "#ffe3e3"
-LAST_CELL_COLOUR = "#ff0000"
 
 const DIRNAMES = ["N", "E", "S", "W"]
 const DIRS = {
@@ -68,19 +47,17 @@ const DY = {
 	"W":0
 }
 
-function generateMazeGrowingTreeStart(map, rng) {
+function generateMazeGrowingTreeStart(map) {
 	map.initialise(0b1111)
-	map.startX = Math.floor(rng()*map.width)
-	map.startY = Math.floor(rng()*map.height)
+	map.startX = Math.floor(map.rng()*map.width)
+	map.startY = Math.floor(map.rng()*map.height)
 	map.cellList = [[map.startX, map.startY]]
 }
 
-function generateMazeGrowingTreeStep(map, rng) {
-	var PROBABILITY_OF_RANDOM = 0.1
-
+function generateMazeGrowingTreeStep(map) {
 	if (map.cellList.length>0) {
-		if (rng()<PROBABILITY_OF_RANDOM) {
-			var index = Math.floor(rng()*map.cellList.length)
+		if (map.rng()<map.randomProbability) {
+			var index = Math.floor(map.rng()*map.cellList.length)
 		} else {
 			var index = map.cellList.length-1
 		}
@@ -89,7 +66,7 @@ function generateMazeGrowingTreeStep(map, rng) {
 		map.lastCellX = cell[0]
 		map.lastCellY = cell[1]
 
-		var dnames = shuffled(DIRNAMES, rng)
+		var dnames = shuffled(DIRNAMES, map.rng)
 		var foundWall = false
 		for (var i = 0; i < dnames.length; i++) {
 			var neighbour = map.getNeighbourCoords(cell[0], cell[1], dnames[i])
@@ -119,11 +96,16 @@ Map.cells = []
 Map.lastCellX = -1
 Map.lastCellY = -1
 Map.intervalID = -1
+Map.randomProbability = 0
 Map.visited = []
 Map.cellList = []
-Map.width = MAP_WIDTH
-Map.height= MAP_HEIGHT
+Map.width = 0
+Map.height= 0
+Map.isGenerating = false
+Map.rng = {}
 Map.initialise = function(walls = 0b1111) {
+	this.rng = new Math.seedrandom(document.getElementById("seed").value);
+
 	this.cells = []
 	for (var x=0; x<this.width; x++) {
 		var col = []
@@ -164,34 +146,78 @@ Map.isInMap = function(x,y) {
 	return (x>=0)&&(y>=0)&&(x<this.width)&&(y<this.height)
 }
 
+Map.startGen = function() {
+	return this.startGenFunction(this, this.rng)
+}
+
+Map.stopGenerating = function() {
+	clearInterval(this.intervalID)
+	this.intervalID = -1
+	this.isGenerating = false
+}
+
+Map.step = function() {
+	return this.stepFunction(this, this.rng)
+}
+
+Map.updateUPS = function() {
+	if (this.isGenerating) {
+		clearInterval(this.intervalID)
+		this.intervalID = setInterval(function(map) {
+			done = map.step()
+			if (done) {
+				map.stopGenerating()
+			}
+			drawMap(map)
+		}, 1000/document.getElementById("ups").value, this)
+	}
+}
+
 Map.startGenFunction = generateMazeGrowingTreeStart
 Map.stepFunction = generateMazeGrowingTreeStep
 
 function drawMap(map) {
+	var canvas=document.getElementById("mainCanvas");
+	var ctx=canvas.getContext("2d");
+	
+	var WALL_COLOUR = "#000000"
+	var VISITED_COLOUR = "#FFFFFF"
+	var UNVISITED_COLOUR = "#CCCCCC"
+	var IN_LIST_COLOUR = "#ffe3e3"
+	var LAST_CELL_COLOUR = "#ff0000"
+
 	var CELL_WIDTH = Math.floor(canvas.width/map.width);
 	var CELL_HEIGHT = Math.floor(canvas.height/map.height);
 
-	ctx=canvas.getContext("2d");
+
 	ctx.fillStyle = "#FFFFFF"
 	ctx.fillRect(0, 0, canvas.width, canvas.height)
 
+	ctx.fillStyle = VISITED_COLOUR
+	ctx.fillRect(0, 0, CELL_WIDTH*map.width, CELL_HEIGHT*map.height)
+
+	ctx.fillStyle = UNVISITED_COLOUR
 	for (var x=0; x<map.width; x++) {
 		for (var y=0; y<map.width; y++) {
-			if (x==map.lastCellX && y==map.lastCellY) {
-				ctx.fillStyle = LAST_CELL_COLOUR
+			if (!map.visited[x][y]) {
+				ctx.fillRect(x*CELL_WIDTH, y*CELL_HEIGHT, CELL_WIDTH, CELL_HEIGHT)
 			}
-			else if (arrayContains(map.cellList, [x,y])) {
-				ctx.fillStyle = IN_LIST_COLOUR
-			}
-			else if (map.visited[x][y]) {
-				ctx.fillStyle = VISITED_COLOUR
-			}
-			else {
-				ctx.fillStyle = UNVISITED_COLOUR
-			}
-			ctx.fillRect(x*CELL_WIDTH, y*CELL_HEIGHT, CELL_WIDTH, CELL_HEIGHT)
+		}
+	}
 
-			ctx.fillStyle = WALL_COLOUR
+	ctx.fillStyle = IN_LIST_COLOUR
+	for (var i=0; i<map.cellList.length; i++) {
+		c = map.cellList[i]
+		ctx.fillRect(c[0]*CELL_WIDTH, c[1]*CELL_HEIGHT, CELL_WIDTH, CELL_HEIGHT)
+
+	}
+
+	ctx.fillStyle = LAST_CELL_COLOUR
+	ctx.fillRect(map.lastCellX*CELL_WIDTH, map.lastCellY*CELL_HEIGHT, CELL_WIDTH, CELL_HEIGHT)
+
+	ctx.fillStyle = WALL_COLOUR
+	for (var x=0; x<map.width; x++) {
+		for (var y=0; y<map.width; y++) {
 			if (map.hasWall(x,y,"N")) {
 				ctx.fillRect(x*CELL_WIDTH, y*CELL_HEIGHT, CELL_WIDTH, 1)
 			}
@@ -206,38 +232,66 @@ function drawMap(map) {
 			}
 		}
 	}
-	console.log("Drawn map.")
 }
 
 function generateStepwise() {
-	var rng = new Math.seedrandom(document.getElementById("seed").value);
-	Map.startGenFunction(Map, rng)
+	Map.stopGenerating()
+	Map.isGenerating = true
+	Map.startGen()
 	drawMap(Map)
-	clearInterval(Map.intervalID)
-	Map.intervalID = -1
-	Map.intervalID = setInterval(function(map, rng) {
-		done = map.stepFunction(map, rng)
+	Map.intervalID = setInterval(function(map) {
+		done = map.step()
 		if (done) {
-			clearInterval(map.intervalID)
-			map.intervalID = -1
+			Map.stopGenerating()
 		}
 		drawMap(map)
-	}, GENERATION_STEP_DELAY, Map, rng)
+	}, 1000/document.getElementById("ups").value, Map)
 }
 
 function generateAtOnce() {
+	Map.stopGenerating()
 	var rng = new Math.seedrandom(document.getElementById("seed").value);
-	Map.startGenFunction(Map, rng)
+	Map.startGen(rng)
 	done = false
 	while (!done) {
-		done = Map.stepFunction(Map, rng)
+		done = Map.step(rng)
 	}
+	Map.isGenerating = false
+	drawMap(Map)
+}
+
+function updateAll() {
+	size = document.getElementById("size").value
+	document.getElementById("sizeOut").innerHTML = String(size)+"x"+String(size)
+	document.getElementById("randomProbabilityOut").innerHTML = document.getElementById("randomProbability").value/100;
+	document.getElementById("upsOut").innerHTML = document.getElementById("ups").value;
+	Map.randomProbability = document.getElementById("randomProbability").value/100
+	Map.stopGenerating()
+	Map.width = size
+	Map.height = size
+	Map.initialise()
+
+	if (document.getElementById("autoGenerate").checked) {
+		generateAtOnce()
+	}
+
 	drawMap(Map)
 }
 
 document.getElementById("seed").value = "seed"
+
+document.getElementById("size").addEventListener("input", updateAll);
+document.getElementById("randomProbability").addEventListener("input", updateAll);
+document.getElementById("ups").addEventListener("input", function() {
+	Map.updateUPS();
+	document.getElementById("upsOut").innerHTML = document.getElementById("ups").value;
+});
+
 document.getElementById("randomSeed").addEventListener("click", function() {
 	document.getElementById("seed").value = randomString(Math.ceil(Math.random()*8)+4);
+	if (document.getElementById("autoGenerate").checked) {
+		updateAll()
+	}
 });
 
 document.getElementById("generateStepwiseButton").addEventListener("click", function() {
@@ -248,5 +302,11 @@ document.getElementById("generateAtOnceButton").addEventListener("click", functi
 	generateAtOnce()
 });
 
-Map.initialise()
+document.getElementById("autoGenerate").addEventListener("change", function() {
+	if (document.getElementById("autoGenerate").checked) {
+		generateAtOnce()
+	}
+});
+
+updateAll()
 drawMap(Map)

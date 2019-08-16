@@ -14,9 +14,13 @@
 		</div>
 		<div id=config>
 		<input type=text id="seed"> <button id="randomSeed">Random seed!</button>
+		<br><input type=range id="size" min=5 max=50 value=10> Size: <span id="sizeOut"></span>
+		<br><input type=range id="randomProbability" min=0 max=100 value=20> Probability of random: <span id="randomProbabilityOut"></span>
 		<br>
-		<br><button id = "generateStepwiseButton">Start</button>
-		<br><button id = "generateAtOnceButton">Generate</button>
+		<br><input type=checkbox id="autoGenerate" checked>Regenerate on settings change
+		<br><button id = "generateStepwiseButton">Start generation</button>
+		<br><button id = "generateAtOnceButton">Generate all at once</button>
+		<br><input type=range id="ups" min=1 max=60 value=30> Target updates per second: <span id="upsOut"></span>
 		<br>
 		</div>
 	<center>
