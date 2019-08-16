@@ -8,155 +8,181 @@ function arrayContains(arr, val) {
 	return false
 }
 
-function randomString(len) {
+function randomString(len, rng = Math.random) {
     var text = "";
     var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
     for (var i=0; i<len; i++)
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
+        text += possible.charAt(Math.floor(rng() * possible.length));
 
     return text;
 }
 
-gridWidth = 20;
-gridHeight = 20;
-mapWidth  = gridWidth*2  + 1
-mapHeight = gridHeight*2 + 1
-
-canvas=document.getElementById("mainCanvas");
-cellWidth = Math.floor(canvas.width/mapWidth);
-cellHeight = Math.floor(canvas.height/mapHeight);
-wallColour = "#888888"
-floorColour = "#000000"
-wall = true
-floor = false
-
-map = [] //map is [x][y]
-
-function isInMap(x,y) {
-	return (x>=0)&&(y>=0)&&(x<mapWidth)&&(y<mapHeight)
-}
-
-function isValidWall(x,y) {
-	return (x>=1)&&(y>=1)&&(x<mapWidth-1)&&(y<mapHeight-1)
-}
-
-function getCellWalls(cell) {
-	x = cell[0]
-	y = cell[1]
-	n = []
-	if (isValidWall(x,y-1)) {n.push([x,y-1])}
-	if (isValidWall(x,y+1)) {n.push([x,y+1])}
-	if (isValidWall(x+1,y)) {n.push([x+1,y])}
-	if (isValidWall(x-1,y)) {n.push([x-1,y])}
-	return n
-}
-
-function getWallCells(wall) {
-	x = wall[0]
-	y = wall[1]
-	cells = []
-	if (x%2==0) { //then x is even, so we must be on a horizontal wall
-		cells.push([x-1, y])
-		cells.push([x+1, y])
-	} else { //on a vertical wall
-		cells.push([x, y-1])
-		cells.push([x, y+1])
-	}
-	return cells
+function shuffled(l, rng = Math.random) {
+    n = []
+    li = [].concat(l)
+    for (var i=0; i<l.length; i+=1) {
+    	n.push(li.splice(Math.floor(rng()*li.length),1)[0])
+    }
+    return n
 }
 
 function pickRandom(list, rng = Math.random) {
 	return list[Math.floor(rng()*list.length)]
 }
 
-function updateMap() {
-	// first, blank the map
-	map = []
-	
-	for (var x=0; x<mapWidth; x+=1) {
-		col = []
-		for (var y=0; y<mapHeight; y+=1) {
-			col.push(wall)
+MAP_WIDTH = 20;
+MAP_HEIGHT = 20;
+
+canvas=document.getElementById("mainCanvas");
+WALL_COLOUR = "#000000"
+FLOOR_COLOUR = "#FFFFFF"
+
+const DIRNAMES = ["N", "E", "S", "W"]
+const DIRS = {
+	"N":0b0001, 
+	"E":0b0010, 
+	"S":0b0100, 
+	"W":0b1000
+}
+const INVDIRS = {
+	"N":0b0100, 
+	"E":0b1000, 
+	"S":0b0001, 
+	"W":0b0010
+}
+const DX = {
+	"N":0, 
+	"E":1, 
+	"S":0, 
+	"W":-1
+}
+const DY = {
+	"N":-1, 
+	"E":0, 
+	"S":1, 
+	"W":0
+}
+
+Map = {}
+Map.cells = []
+Map.width = MAP_WIDTH
+Map.height= MAP_HEIGHT
+Map.initialise = function(walls = 0b1111) {
+	this.cells = []
+	for (var x=0; x<this.width; x++) {
+		var col = []
+		for (var y=0; y<this.height; y++) {
+			col.push(walls)
 		}
-		map.push(col)
+		this.cells.push(col)
+	}
+}
+
+Map.addWall = function(x, y, dir) {
+	this.cells[x][y] |= DIRS[dir]
+	this.cells[ x+DX[dir] ][ y+DY[dir] ] |= INVDIRS[dir]
+}
+
+Map.delWall = function(x, y, dir) {
+	this.cells[x][y] &= ~DIRS[dir]
+	this.cells[ x+DX[dir] ][ y+DY[dir] ] &= ~INVDIRS[dir]
+}
+
+Map.hasWall = function(x,y,dir) {
+	return this.cells[x][y] & DIRS[dir]
+}
+
+Map.getNeighbourCoords = function(x,y,dir) {
+	return [x+DX[dir], y+DY[dir]]
+}
+
+Map.isInMap = function(x,y) {
+	return (x>=0)&&(y>=0)&&(x<this.width)&&(y<this.height)
+}
+
+
+function generateMazeGrowingTree(map, rng) {
+	map.initialise()
+	var startX = Math.floor(rng()*map.width)
+	var startY = Math.floor(rng()*map.height)
+	var cellList = [[startX, startY]]
+
+	visited = []
+	for (var x=0; x<map.width; x++) {
+		var col = []
+		for (var y=0; y<map.height; y++) {
+			col.push(false)
+		}
+		visited.push(col)
 	}
 
-	//then comes algorithm time
-	//randomised Prim's algorithm
+	ppp=[].concat(cellList)
 
-	seed = document.getElementById("seed").value
-	rng = new Math.seedrandom(seed);
-
-	startX = Math.floor(rng()*gridWidth)
-	startY = Math.floor(rng()*gridHeight)
-	startX = startX*2+1
-	startY = startY*2+1
-
-	map[startX][startY] = floor
-
-	wallList = getCellWalls([startX, startY])
-	cellList = [[startX, startY]]
-
-	while (wallList.length>0) {
-		w = pickRandom(wallList, rng)
-		
-		//console.log("   ")
-		//console.log("cellList", [].concat(cellList))
-		//console.log("w",w)
-		//console.log("wallList", [].concat(wallList))
-
-		sides = getWallCells(w)
-		side = -1
-		if (!arrayContains(cellList,sides[0])) {
-			side = sides[0]
-		}
-		if (!arrayContains(cellList,sides[1])) {
-			side = sides[1]	
-		}
-
-		wallList.splice(wallList.indexOf(w),1)
-
-		if (side != -1) {
-			map[side[0]][side[1]] = floor
-			map[w[0]][w[1]] = floor
-
-			cellList.push(side)
-			newWalls = getCellWalls(side)
-
-			//console.log("side", [].concat(side))
-			//console.log("newWalls", [].concat(newWalls))
-
-			for (var i=0; i<newWalls.length; i=i+1) {
-				if (!arrayContains(wallList, newWalls[i])) {
-					wallList.push(newWalls[i])
-				}
+	count = 0
+	
+	while (cellList.length>0) {
+		count+=1
+		//var index = Math.floor(rng()*cellList.length)
+		var index = cellList.length-1
+		var cell = cellList[index]
+		var dnames = shuffled(DIRNAMES, rng)
+		//console.log("cell", cell[0], cell[1])
+		//console.log("dnames", dnames)
+		var foundWall = false
+		for (var i = 0; i < dnames.length; i++) {
+			var neighbour = map.getNeighbourCoords(cell[0], cell[1], dnames[i])
+			//console.log("neighbour", [].concat(neighbour), dnames[i])
+			if (map.isInMap(neighbour[0], neighbour[1]) && !visited[neighbour[0]][neighbour[1]]) {
+				map.delWall(cell[0], cell[1], dnames[i])
+				cellList.push(neighbour)
+				visited[neighbour[0]][neighbour[1]] = true
+				//console.log("Deleted wall", cell, dnames[i])
+				foundWall = true
+				break
 			}
 		}
+		if (!foundWall) {
+			cellList.splice(index, 1)
+		}
 	}
-	console.log("Done with generation")
-	drawMap(map)
 }
 
 function drawMap(map) {
+	var CELL_WIDTH = Math.floor(canvas.width/map.width);
+	var CELL_HEIGHT = Math.floor(canvas.height/map.height);
+
 	ctx=canvas.getContext("2d");
-	
-	for (var x=0; x<mapWidth; x++) {
-		for (var y=0; y<mapHeight; y++) {
-			if (map[x][y]==wall) {
-				ctx.fillStyle = wallColour
-			} else {
-				ctx.fillStyle = floorColour
+	ctx.fillStyle = WALL_COLOUR
+	ctx.fillRect(0, 0, canvas.width, canvas.height)
+	ctx.fillStyle = FLOOR_COLOUR
+	ctx.fillRect(0, 0, CELL_WIDTH*map.width, CELL_HEIGHT*canvas.height)
+
+	ctx.fillStyle = WALL_COLOUR
+	for (var x=0; x<map.width; x++) {
+		for (var y=0; y<map.width; y++) {
+			if (map.hasWall(x,y,"N")) {
+				ctx.fillRect(x*CELL_WIDTH, y*CELL_HEIGHT, CELL_WIDTH, 1)
 			}
-			ctx.fillRect(x * cellWidth, y * cellWidth, cellWidth, cellHeight);
+			if (map.hasWall(x,y,"S")) {
+				ctx.fillRect(x*CELL_WIDTH, y*CELL_HEIGHT + CELL_HEIGHT-1, CELL_WIDTH, 1)
+			}
+			if (map.hasWall(x,y,"W")) {
+				ctx.fillRect(x*CELL_WIDTH, y*CELL_HEIGHT, 1, CELL_HEIGHT)
+			}
+			if (map.hasWall(x,y,"E")) {
+				ctx.fillRect(x*CELL_WIDTH + CELL_WIDTH-1, y*CELL_HEIGHT, 1, CELL_HEIGHT)
+			}
 		}
 	}
+	console.log("Drawn map.")
 }
 
-document.getElementById("randomSeed").addEventListener("click", function() {
-	document.getElementById("seed").value = randomString(Math.ceil(Math.random()*8)+4);
-	updateAll();
-});
+function updateMap() {
+	var rng = new Math.seedrandom(document.getElementById("seed").value);
+	generateMazeGrowingTree(Map, rng)
+	drawMap(Map)
+}
 
 function updateAll() {
 	if (document.getElementById("liveUpdateMap").checked) {
@@ -164,4 +190,13 @@ function updateAll() {
 	}
 }
 
+document.getElementById("seed").value = randomString(Math.ceil(Math.random()*8)+4)
+document.getElementById("randomSeed").addEventListener("click", function() {
+	document.getElementById("seed").value = randomString(Math.ceil(Math.random()*8)+4);
+	updateAll();
+});
+
+
 document.getElementById("seed").addEventListener("input", updateAll);
+
+updateAll()
