@@ -263,7 +263,7 @@ function generateAtOnce() {
 function updateAll() {
 	size = document.getElementById("size").value
 	document.getElementById("sizeOut").innerHTML = String(size)+"x"+String(size)
-	document.getElementById("randomProbabilityOut").innerHTML = document.getElementById("randomProbability").value/100;
+	document.getElementById("randomProbabilityOut").innerHTML = String(document.getElementById("randomProbability").value)+"%";
 	document.getElementById("upsOut").innerHTML = document.getElementById("ups").value;
 	Map.randomProbability = document.getElementById("randomProbability").value/100
 	Map.stopGenerating()
