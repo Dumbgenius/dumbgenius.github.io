@@ -105,6 +105,18 @@ span.centered {
 	font-size:50px;
 }
 
+#mazegen {
+	background-color:#ff784f;
+	font-family:verdana;
+	font-size:55px;
+	font-weight:bold;
+	color:#9e4fff;
+}
+
+#mazegen:hover {
+	font-size:62px;
+}
+
 #backlink {
 	color:#10d010;
 	font-family:courier;
