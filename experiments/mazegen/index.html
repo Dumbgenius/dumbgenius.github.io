@@ -14,18 +14,25 @@
 		</div>
 		<div id=config>
 		<input type=text id="seed"> <button id="randomSeed">Random seed!</button>
-		<br><input type=range id="size" min=5 max=50 value=10> Size: <span id="sizeOut"></span>
+		<br><input type=range id="size" min=5 max=50 value=50> Size: <span id="sizeOut"></span>
 		<br><input type=range id="randomProbability" min=0 max=100 value=20> Probability of random: <span id="randomProbabilityOut"></span>
+		<br><input type=range id="roomAttempts" min=10 max=200 value=40> Attempts to place rooms: <span id="roomAttemptsOut"></span>
 		<br>
 		<br><input type=checkbox id="autoGenerate" checked>Regenerate on settings change
 		<br><input type=checkbox id="autoPathfind">Pathfind on settings change
+		<br><input type=checkbox id="dungeonMode">Dungeon Mode
+		<br><input type=checkbox id="showStats">Show stats (lowers performance)
 		<br><button id = "generateAtOnceButton">Generate all at once</button>
 		<br><button id = "generateStepwiseButton">Generate bit-by-bit</button>
 		<br><button id = "pathfindAtOnceButton">Pathfind all at once</button>
 		<br><button id = "pathfindStepwiseButton">Pathfind bit-by-bit</button>
 		<br><input type=range id="ups" min=1 max=60 value=30> Target updates per second: <span id="upsOut"></span>
 		<br>
-		<br>Stats: <span id=statsOut></span> 
+		<br><span id=statsOut></span> 
+		<br><button id = "addRoomButton">Add rooms</button>
+			<button id = "generateFromFirstEnclosedButton">Generate maze from first enclosed cell</button>
+			<button id = "breakRandomBoundaryButton">Break random boundary</button>
+			<button id = "closeOffAllDeadEndsButton">Close off all dead ends</button>
 		<br>
 		<br>
 		</div>

@@ -21,6 +21,13 @@ function pickRandom(list, rng = Math.random) {
 	return list[Math.floor(rng()*list.length)]
 }
 
+function rectanglesIntersect(left1, top1, right1, bottom1, left2, top2, right2, bottom2) {
+  return !(left2 > right1 || 
+           right2 < left1 || 
+           top2 > bottom1 ||
+           bottom2 < top1);
+}
+
 const DIRNAMES = ["N", "E", "S", "W"]
 const DIRS = {
 	"N":0b0001, 
@@ -47,10 +54,21 @@ const DY = {
 	"W":0
 }
 
-function generateMazeGrowingTreeStart(maze) {
-	maze.initialise(0b1111)
-	maze.startX = Math.floor(maze.rng()*maze.width)
-	maze.startY = Math.floor(maze.rng()*maze.height)
+function generateMazeGrowingTreeStart(maze, startX=null, startY=null, skipMazeInit = false) {
+	if (!skipMazeInit) {
+		maze.initialise(0b1111)
+	}
+	if (startX == null) {
+		maze.startX = Math.floor(maze.rng()*maze.width)
+	} else {
+		maze.startX = startX
+	}
+
+	if (startY == null) {
+		maze.startY = Math.floor(maze.rng()*maze.height)
+	} else {
+		maze.startY = startY
+	}
 	maze.cellList = [[maze.startX, maze.startY]]
 	maze.visited[maze.startX][maze.startY] = true
 }
@@ -137,6 +155,7 @@ function stepPathfindDepthFirst(maze) {
 Maze = {}
 Maze.cells = []
 Maze.path = []
+Maze.rooms = []
 Maze.pathfindStartX = -1
 Maze.pathfindStartY = -1
 Maze.pathfindEndX = -1
@@ -181,6 +200,8 @@ Maze.initialise = function(walls = 0b1111) {
 	this.lastCellX = -1
 	this.lastCellY = -1
 	this.cellList = []
+
+	this.rooms = []
 }
 
 Maze.visitAll = function() {
@@ -196,7 +217,9 @@ Maze.visitAll = function() {
 
 Maze.addWall = function(x, y, dir) {
 	this.cells[x][y] |= DIRS[dir]
-	this.cells[ x+DX[dir] ][ y+DY[dir] ] |= INVDIRS[dir]
+	if (this.isInMap(x+DX[dir], y+DY[dir])) {
+		this.cells[ x+DX[dir] ][ y+DY[dir] ] |= INVDIRS[dir]
+	}
 }
 
 Maze.delWall = function(x, y, dir) {
@@ -216,8 +239,12 @@ Maze.isInMap = function(x,y) {
 	return (x>=0)&&(y>=0)&&(x<this.width)&&(y<this.height)
 }
 
+Maze.isNotOnEdge = function(x,y) {
+	return (x>=1)&&(y>=1)&&(x<this.width-1)&&(y<this.height-1)
+}
+
 Maze.startGen = function() {
-	return this.startGenFunction(this, this.rng)
+	return this.startGenFunction(this)
 }
 
 Maze.startPathfind = function(startx, starty, endx, endy) {
@@ -273,6 +300,90 @@ Maze.listOpenAdjacents = function(x,y) {
 	return result
 }
 
+Maze.closeOffDeadEnds = function() {
+	unchanged = true
+	for (var x=0; x<this.width; x++) {
+		for (var y=0; y<this.height; y++) {
+			if(/*this.isNotOnEdge(x,y) &&*/ this.listOpenAdjacents(x,y).length==1) {
+				for (var i=0; i<DIRNAMES.length; i++) { 
+					this.addWall(x, y, DIRNAMES[i])
+				}
+				unchanged = false
+			}
+		}
+	}
+	return unchanged
+}
+
+Maze.closeOffAllDeadEnds = function() {
+	var done = false
+	while (!done) {
+		done = this.closeOffDeadEnds()
+	}
+}
+
+Maze.clearArea = function(left, top, right, bottom) {
+	for (var x=left; x<right; x++) {
+		for (var y=top; y<bottom; y++) {
+			if(x>left) {
+				this.delWall(x, y, "W")
+			}
+			if(x<right-1) {
+				this.delWall(x, y, "E")
+			}
+			if(y>top) {
+				this.delWall(x, y, "N")
+			}
+			if(y<bottom-1) {
+				this.delWall(x, y, "S")
+			}
+
+			this.visited[x][y] = true
+		}
+	}
+}
+
+Maze.addRooms = function() {
+	var MIN_DIM = 3
+	var MAX_DIM = Math.min(9, this.width, this.height)
+	var MAX_ATTEMPTS = document.getElementById("roomAttempts").value;
+
+	for (var i=0; i<MAX_ATTEMPTS; i++) {
+		var width = Math.floor(this.rng()*(MAX_DIM-MIN_DIM) + MIN_DIM)
+		var height = Math.floor(this.rng()*(MAX_DIM-MIN_DIM) + MIN_DIM)
+		var x = Math.floor(this.rng() * (this.width - width))
+		var y = Math.floor(this.rng() * (this.height - height))
+		var okayToPlace = true
+
+		for (var j=0; j<this.rooms.length; j++) {
+			if (rectanglesIntersect(x, y, x+width, y+height, this.rooms[j][0], this.rooms[j][1], this.rooms[j][2], this.rooms[j][3])) {
+				okayToPlace = false;
+			} 
+		}
+		
+		if (okayToPlace) {
+			this.rooms.push([x, y, x+width, y+height])
+			this.clearArea(x, y, x+width, y+height)
+		}
+	}
+}
+
+Maze.generateFromFirstEnclosed = function() {
+	for (var x=0; x<this.width; x++) {
+		for (var y=0; y<this.height; y++) {
+			if (this.cells[x][y] == 0b1111) {
+				this.startGenFunction(this, x, y, true)
+				var done = false
+				while (!done) {
+					done = this.step()
+				}
+				return true
+			}
+		}
+	}
+	return false
+}
+
 Maze.getStats = function() { //returns a 5-element array wher arr[n] is the number of cells with n exits
 	stats = [0,0,0,0,0]
 	for (var x=0; x<this.width; x++) {
@@ -281,6 +392,90 @@ Maze.getStats = function() { //returns a 5-element array wher arr[n] is the numb
 		}
 	}
 	return stats
+
+}
+
+Maze.computeZones = function() {
+	this.zones = []
+	for (var x=0; x<this.width; x++) {
+		var col = []
+		for (var y=0; y<this.height; y++) {
+			col.push(-1)
+		}
+		this.zones.push(col)
+	}
+	var done = false
+	var id = 0
+	while (!done) {
+		var foundStart = false
+		activeCells = []
+		for (var x=0; x<this.width && !foundStart; x++) {
+			for (var y=0; y<this.height && !foundStart; y++) {
+				if (this.zones[x][y] == -1) {
+					foundStart = true
+					activeCells = [[x,y]]
+					this.zones[x][y] = id
+				}
+			}
+		}
+		if (!foundStart) {
+			done = true
+		}
+		else {
+			id+=1
+		}
+		while (activeCells.length>0) {
+			var cell = activeCells.pop()
+			var neighbours = this.listOpenAdjacents(cell[0], cell[1])
+			for (var i=0; i<neighbours.length; i++) {
+				if (this.zones[neighbours[i][0]][neighbours[i][1]] != id) {
+					activeCells.push(neighbours[i])
+					this.zones[neighbours[i][0]][neighbours[i][1]] = id
+				}
+			}
+		}
+	}
+	this.numZones = id
+}
+
+Maze.computeBoundaries = function() { //ONLY lists North and West walls, to avoid double-counting.
+	this.boundaries = []
+	for (var x=1; x<this.width; x++) {
+		for (var y=1; y<this.height; y++) {
+			if (this.zones[x-1][y] != this.zones[x][y]) {
+				this.boundaries.push([x, y, "W"])
+			}
+			if (this.zones[x][y-1] != this.zones[x][y]) {
+				this.boundaries.push([x, y, "N"])
+			}
+		}
+	}
+}
+
+Maze.breakRandomBoundary = function() {
+	this.computeBoundaries()
+	if (this.boundaries.length == 0) {
+		return false
+	}
+	var index = Math.floor(this.rng() * this.boundaries.length)
+	var boundary = this.boundaries[index]
+	var zone1 = this.zones[boundary[0]][boundary[1]]
+	var zone2 = this.zones[boundary[0]+DX[boundary[2]]][boundary[1]+DY[boundary[2]]]
+	this.delWall(boundary[0], boundary[1], boundary[2])
+	for (var x=0; x<this.width; x++) {
+		for (var y=0; y<this.height; y++) {
+			if (this.zones[x][y] == zone2) {
+				this.zones[x][y] = zone1
+			}
+		}
+	}
+}
+
+Maze.breakAllBoundaries = function() {
+	this.computeZones()
+	for (var i=this.zones.length; i>=0; i--) {
+		this.breakRandomBoundary()
+	}
 }
 
 Maze.startGenFunction = generateMazeGrowingTreeStart
@@ -321,6 +516,16 @@ function drawMaze(maze) {
 			}
 		}
 	}
+
+	ctx.fillStyle = WALL_COLOUR
+	for (var x=0; x<maze.width; x++) {
+		for (var y=0; y<maze.width; y++) {
+			if (maze.cells[x][y] == 0b1111) {
+				ctx.fillRect(x*CELL_WIDTH, y*CELL_HEIGHT, CELL_WIDTH, CELL_HEIGHT)
+			}
+		}
+	}
+
 
 	ctx.fillStyle = IN_LIST_COLOUR
 	for (var i=0; i<maze.cellList.length; i++) {
@@ -384,7 +589,10 @@ function drawMaze(maze) {
 	ctx.fill()
 	ctx.closePath()
 
-	updateStats()
+	if (document.getElementById("showStats").checked) {
+		updateStats()	
+	}
+	
 }
 
 function generateStepwise() {
@@ -402,13 +610,21 @@ function generateStepwise() {
 }
 
 function generateAtOnce() {
-	Maze.clearInterval()
-	Maze.startGen()
-	done = false
-	while (!done) {
-		done = Maze.step()
+	if (Maze.dungeonMode) {
+		Maze.clearInterval()
+		Maze.addRooms()
+		Maze.generateFromFirstEnclosed()
+		Maze.breakAllBoundaries()
+		Maze.closeOffAllDeadEnds()
+	} else {
+		Maze.clearInterval()
+		Maze.startGen()
+		done = false
+		while (!done) {
+			done = Maze.step()
+		}
+		Maze.isGenerating = false
 	}
-	Maze.isGenerating = false
 	drawMaze(Maze)
 }
 
@@ -442,14 +658,37 @@ function pathfindAtOnce() {
 	drawMaze(Maze)
 }
 
+function closeOffAllDeadEnds() {
+	Maze.clearInterval()
+	Maze.closeOffAllDeadEnds()
+	drawMaze(Maze)
+}
+
+function generateFromFirstEnclosed() {
+	Maze.clearInterval()
+	Maze.generateFromFirstEnclosed()
+	drawMaze(Maze)
+}
+
+function breakRandomBoundary() {
+	Maze.clearInterval()
+	Maze.breakRandomBoundary()
+	drawMaze(Maze)
+}
+
 function updateStats() {
 	var stats = Maze.getStats()
-	var txt = "The maze has "
+	var txt = "<b>Stats:</b> The maze has "
 	txt += "<b>" + String(stats[0]) + "</b> enclosed cell[s], " 
 	txt += "<b>" + String(stats[1]) + "</b> dead end[s], " 
 	txt += "<b>" + String(stats[2]) + "</b> passageway[s], " 
 	txt += "<b>" + String(stats[3]) + "</b> T-junction[s], and " 
-	txt += "<b>" + String(stats[4]) + "</b> 4-way junction[s]." 
+	txt += "<b>" + String(stats[4]) + "</b> 4-way junction[s]. " 
+
+	Maze.computeZones()
+	Maze.computeBoundaries()
+
+	txt += "It has " + Maze.numZones + " zone[s], and " + Maze.boundaries.length + " boundary wall[s]."
 
 	document.getElementById("statsOut").innerHTML = txt
 }
@@ -458,11 +697,13 @@ function updateAll() {
 	size = document.getElementById("size").value
 	document.getElementById("sizeOut").innerHTML = String(size)+"x"+String(size)
 	document.getElementById("randomProbabilityOut").innerHTML = String(document.getElementById("randomProbability").value)+"%";
+	document.getElementById("roomAttemptsOut").innerHTML = document.getElementById("roomAttempts").value;
 	document.getElementById("upsOut").innerHTML = document.getElementById("ups").value;
 	Maze.randomProbability = document.getElementById("randomProbability").value/100
 	Maze.clearInterval()
 	Maze.width = size
 	Maze.height = size
+	Maze.dungeonMode = document.getElementById("dungeonMode").checked
 	Maze.initialise()
 
 	if (document.getElementById("autoGenerate").checked) {
@@ -479,6 +720,7 @@ document.getElementById("seed").value = "seed"
 
 document.getElementById("size").addEventListener("input", updateAll);
 document.getElementById("randomProbability").addEventListener("input", updateAll);
+document.getElementById("roomAttempts").addEventListener("input", updateAll);
 document.getElementById("ups").addEventListener("input", function() {
 	Maze.updateUPS();
 	document.getElementById("upsOut").innerHTML = document.getElementById("ups").value;
@@ -507,16 +749,43 @@ document.getElementById("pathfindAtOnceButton").addEventListener("click", functi
 	pathfindAtOnce()
 });
 
+document.getElementById("addRoomButton").addEventListener("click", function() {
+	Maze.addRooms()
+	drawMaze(Maze)
+});
+
+document.getElementById("closeOffAllDeadEndsButton").addEventListener("click", function() {
+	closeOffAllDeadEnds()
+});
+
+document.getElementById("generateFromFirstEnclosedButton").addEventListener("click", function() {
+	generateFromFirstEnclosed()
+});
+
+document.getElementById("breakRandomBoundaryButton").addEventListener("click", function() {
+	breakRandomBoundary()
+});
+
 document.getElementById("autoGenerate").addEventListener("change", function() {
 	if (document.getElementById("autoGenerate").checked) {
 		generateAtOnce()
 	}
+	updateAll()
 });
 
 document.getElementById("autoPathfind").addEventListener("change", function() {
 	if (document.getElementById("autoPathfind").checked) {
 		pathfindAtOnce()
 	}
+	updateAll()
+});
+
+document.getElementById("dungeonMode").addEventListener("change", function() {
+	updateAll()
+});
+
+document.getElementById("showStats").addEventListener("change", function() {
+	document.getElementById("statsOut").hidden = !document.getElementById("showStats").checked
 });
 
 updateAll()
