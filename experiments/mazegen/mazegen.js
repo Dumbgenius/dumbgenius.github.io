@@ -52,6 +52,7 @@ function generateMazeGrowingTreeStart(maze) {
 	maze.startX = Math.floor(maze.rng()*maze.width)
 	maze.startY = Math.floor(maze.rng()*maze.height)
 	maze.cellList = [[maze.startX, maze.startY]]
+	maze.visited[maze.startX][maze.startY] = true
 }
 
 function generateMazeGrowingTreeStep(maze) {
