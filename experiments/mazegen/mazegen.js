@@ -683,24 +683,6 @@ function pathfindAtOnce() {
 	drawMaze(Maze)
 }
 
-function closeOffAllDeadEnds() {
-	Maze.clearInterval()
-	Maze.closeOffAllDeadEnds()
-	drawMaze(Maze)
-}
-
-function generateFromFirstEnclosed() {
-	Maze.clearInterval()
-	Maze.generateFromFirstEnclosed()
-	drawMaze(Maze)
-}
-
-function breakRandomBoundary() {
-	Maze.clearInterval()
-	Maze.breakRandomBoundary()
-	drawMaze(Maze)
-}
-
 function updateStats() {
 	var stats = Maze.getStats()
 	var txt = "<b>Stats:</b> The maze has "
@@ -774,23 +756,6 @@ document.getElementById("pathfindStepwiseButton").addEventListener("click", func
 
 document.getElementById("pathfindAtOnceButton").addEventListener("click", function() {
 	pathfindAtOnce()
-});
-
-document.getElementById("addRoomButton").addEventListener("click", function() {
-	Maze.addRooms()
-	drawMaze(Maze)
-});
-
-document.getElementById("closeOffAllDeadEndsButton").addEventListener("click", function() {
-	closeOffAllDeadEnds()
-});
-
-document.getElementById("generateFromFirstEnclosedButton").addEventListener("click", function() {
-	generateFromFirstEnclosed()
-});
-
-document.getElementById("breakRandomBoundaryButton").addEventListener("click", function() {
-	breakRandomBoundary()
 });
 
 document.getElementById("autoGenerate").addEventListener("change", function() {
