@@ -272,6 +272,16 @@ Map.listOpenAdjacents = function(x,y) {
 	return result
 }
 
+Map.getStats = function() { //returns a 5-element array wher arr[n] is the number of cells with n exits
+	stats = [0,0,0,0,0]
+	for (var x=0; x<this.width; x++) {
+		for (var y=0; y<this.height; y++) {
+			stats[this.listOpenAdjacents(x,y).length] += 1
+		}
+	}
+	return stats
+}
+
 Map.startGenFunction = generateMazeGrowingTreeStart
 Map.stepFunction = generateMazeGrowingTreeStep
 Map.startPathfindFunction = startPathfindDepthFirst
@@ -372,6 +382,8 @@ function drawMap(map) {
 	ctx.arc(map.pathfindEndX*CELL_WIDTH + CELL_WIDTH/2, map.pathfindEndY*CELL_HEIGHT + CELL_HEIGHT/2, CELL_WIDTH/3, 0, 2*Math.PI)
 	ctx.fill()
 	ctx.closePath()
+
+	updateStats()
 }
 
 function generateStepwise() {
@@ -427,6 +439,18 @@ function pathfindAtOnce() {
 	Map.isPathfinding = false
 	Map.visitAll()
 	drawMap(Map)
+}
+
+function updateStats() {
+	var stats = Map.getStats()
+	var txt = "The maze has "
+	txt += "<b>" + String(stats[0]) + "</b> enclosed cell[s], " 
+	txt += "<b>" + String(stats[1]) + "</b> dead end[s], " 
+	txt += "<b>" + String(stats[2]) + "</b> passageway[s], " 
+	txt += "<b>" + String(stats[3]) + "</b> T-junction[s], and " 
+	txt += "<b>" + String(stats[4]) + "</b> 4-way junction[s]." 
+
+	document.getElementById("statsOut").innerHTML = txt
 }
 
 function updateAll() {
