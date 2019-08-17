@@ -47,85 +47,85 @@ const DY = {
 	"W":0
 }
 
-function generateMazeGrowingTreeStart(map) {
-	map.initialise(0b1111)
-	map.startX = Math.floor(map.rng()*map.width)
-	map.startY = Math.floor(map.rng()*map.height)
-	map.cellList = [[map.startX, map.startY]]
+function generateMazeGrowingTreeStart(maze) {
+	maze.initialise(0b1111)
+	maze.startX = Math.floor(maze.rng()*maze.width)
+	maze.startY = Math.floor(maze.rng()*maze.height)
+	maze.cellList = [[maze.startX, maze.startY]]
 }
 
-function generateMazeGrowingTreeStep(map) {
-	if (map.cellList.length>0) {
-		if (map.rng()<map.randomProbability) {
-			var index = Math.floor(map.rng()*map.cellList.length)
+function generateMazeGrowingTreeStep(maze) {
+	if (maze.cellList.length>0) {
+		if (maze.rng()<maze.randomProbability) {
+			var index = Math.floor(maze.rng()*maze.cellList.length)
 		} else {
-			var index = map.cellList.length-1
+			var index = maze.cellList.length-1
 		}
-		var cell = map.cellList[index]
+		var cell = maze.cellList[index]
 
-		map.lastCellX = cell[0]
-		map.lastCellY = cell[1]
+		maze.lastCellX = cell[0]
+		maze.lastCellY = cell[1]
 
-		var dnames = shuffled(DIRNAMES, map.rng)
+		var dnames = shuffled(DIRNAMES, maze.rng)
 		var foundWall = false
 		for (var i = 0; i < dnames.length; i++) {
-			var neighbour = map.getNeighbourCoords(cell[0], cell[1], dnames[i])
-			if (map.isInMap(neighbour[0], neighbour[1]) && !map.visited[neighbour[0]][neighbour[1]]) {
-				map.delWall(cell[0], cell[1], dnames[i])
-				map.cellList.push(neighbour)
-				map.visited[neighbour[0]][neighbour[1]] = true
-				map.lastCellX = neighbour[0]
-				map.lastCellY = neighbour[1]
+			var neighbour = maze.getNeighbourCoords(cell[0], cell[1], dnames[i])
+			if (maze.isInMap(neighbour[0], neighbour[1]) && !maze.visited[neighbour[0]][neighbour[1]]) {
+				maze.delWall(cell[0], cell[1], dnames[i])
+				maze.cellList.push(neighbour)
+				maze.visited[neighbour[0]][neighbour[1]] = true
+				maze.lastCellX = neighbour[0]
+				maze.lastCellY = neighbour[1]
 				foundWall = true
 				break
 			}
 		}
 		if (!foundWall) {
-			map.cellList.splice(index, 1)
+			maze.cellList.splice(index, 1)
 		}
 		return false;
 	} else {
-		map.lastCellX=-1
-		map.lastCellY=-1
+		maze.lastCellX=-1
+		maze.lastCellY=-1
 		return true;
 	}
 }
 
-function startPathfindDepthFirst(map, startx, starty, endx, endy) {
-	map.pathfindStartX = startx
-	map.pathfindStartY = starty
-	map.pathfindEndX = endx
-	map.pathfindEndY = endy
-	map.path = [[startx, starty]]
-	map.visited = []
-	for (var x=0; x<map.width; x++) {
+function startPathfindDepthFirst(maze, startx, starty, endx, endy) {
+	maze.pathfindStartX = startx
+	maze.pathfindStartY = starty
+	maze.pathfindEndX = endx
+	maze.pathfindEndY = endy
+	maze.path = [[startx, starty]]
+	maze.visited = []
+	for (var x=0; x<maze.width; x++) {
 		var col = []
-		for (var y=0; y<map.height; y++) {
+		for (var y=0; y<maze.height; y++) {
 			col.push(false)
 		}
-		map.visited.push(col)
+		maze.visited.push(col)
 	}
-	map.visited[startx][starty] = true
+	maze.visited[startx][starty] = true
 }
 
-function stepPathfindDepthFirst(map) {
-	var currentCell = map.path[map.path.length-1]
-	var adjacents = map.listOpenAdjacents(currentCell[0], currentCell[1])
+function stepPathfindDepthFirst(maze) {
+	var currentCell = maze.path[maze.path.length-1]
+	var adjacents = maze.listOpenAdjacents(currentCell[0], currentCell[1])
 	var advanced = false
 	for (var i=0; i<adjacents.length; i++) {
-		if (!map.visited[adjacents[i][0]][adjacents[i][1]]) {
+		if (!maze.visited[adjacents[i][0]][adjacents[i][1]]) {
 			advanced = true
-			map.path.push(adjacents[i])
-			map.visited[adjacents[i][0]][adjacents[i][1]] = true
-			if (adjacents[i][0]==map.pathfindEndX && adjacents[i][1]==map.pathfindEndY) {
+			maze.path.push(adjacents[i])
+			maze.visited[adjacents[i][0]][adjacents[i][1]] = true
+			if (adjacents[i][0]==maze.pathfindEndX && adjacents[i][1]==maze.pathfindEndY) {
 				return true;
 			}
 			break;
 		}
 	}
 	if (!advanced) {
-		map.path.pop()
-		if (map.path.length == 0) {
+		maze.path.pop()
+		if (maze.path.length == 0) {
 			console.log("Error! Could not find path.")
 			return true;
 		}
@@ -133,25 +133,25 @@ function stepPathfindDepthFirst(map) {
 	return false;
 }
 
-Map = {}
-Map.cells = []
-Map.path = []
-Map.pathfindStartX = -1
-Map.pathfindStartY = -1
-Map.pathfindEndX = -1
-Map.pathfindEndY = -1
-Map.lastCellX = -1
-Map.lastCellY = -1
-Map.intervalID = -1
-Map.randomProbability = 0
-Map.visited = []
-Map.cellList = []
-Map.width = 0
-Map.height= 0
-Map.isGenerating = false
-Map.isPathfinding = false
-Map.rng = {}
-Map.initialise = function(walls = 0b1111) {
+Maze = {}
+Maze.cells = []
+Maze.path = []
+Maze.pathfindStartX = -1
+Maze.pathfindStartY = -1
+Maze.pathfindEndX = -1
+Maze.pathfindEndY = -1
+Maze.lastCellX = -1
+Maze.lastCellY = -1
+Maze.intervalID = -1
+Maze.randomProbability = 0
+Maze.visited = []
+Maze.cellList = []
+Maze.width = 0
+Maze.height= 0
+Maze.isGenerating = false
+Maze.isPathfinding = false
+Maze.rng = {}
+Maze.initialise = function(walls = 0b1111) {
 	this.rng = new Math.seedrandom(document.getElementById("seed").value);
 
 	this.cells = []
@@ -182,7 +182,7 @@ Map.initialise = function(walls = 0b1111) {
 	this.cellList = []
 }
 
-Map.visitAll = function() {
+Maze.visitAll = function() {
 	this.visited = []
 	for (var x=0; x<this.width; x++) {
 		var col = []
@@ -193,75 +193,75 @@ Map.visitAll = function() {
 	}
 }
 
-Map.addWall = function(x, y, dir) {
+Maze.addWall = function(x, y, dir) {
 	this.cells[x][y] |= DIRS[dir]
 	this.cells[ x+DX[dir] ][ y+DY[dir] ] |= INVDIRS[dir]
 }
 
-Map.delWall = function(x, y, dir) {
+Maze.delWall = function(x, y, dir) {
 	this.cells[x][y] &= ~DIRS[dir]
 	this.cells[ x+DX[dir] ][ y+DY[dir] ] &= ~INVDIRS[dir]
 }
 
-Map.hasWall = function(x,y,dir) {
+Maze.hasWall = function(x,y,dir) {
 	return this.cells[x][y] & DIRS[dir]
 }
 
-Map.getNeighbourCoords = function(x,y,dir) {
+Maze.getNeighbourCoords = function(x,y,dir) {
 	return [x+DX[dir], y+DY[dir]]
 }
 
-Map.isInMap = function(x,y) {
+Maze.isInMap = function(x,y) {
 	return (x>=0)&&(y>=0)&&(x<this.width)&&(y<this.height)
 }
 
-Map.startGen = function() {
+Maze.startGen = function() {
 	return this.startGenFunction(this, this.rng)
 }
 
-Map.startPathfind = function(startx, starty, endx, endy) {
+Maze.startPathfind = function(startx, starty, endx, endy) {
 	return this.startPathfindFunction(this, startx, starty, endx, endy, this.rng)
 }
 
-Map.clearInterval = function() {
+Maze.clearInterval = function() {
 	clearInterval(this.intervalID)
 	this.intervalID = -1
 	this.isGenerating = false
 	this.isPathfinding = false
 }
 
-Map.step = function() {
+Maze.step = function() {
 	return this.stepFunction(this, this.rng)
 }
 
-Map.stepPathfind = function() {
+Maze.stepPathfind = function() {
 	return this.stepPathfindFunction(this, this.rng)
 }
 
-Map.updateUPS = function() {
+Maze.updateUPS = function() {
 	if (this.isGenerating) {
 		clearInterval(this.intervalID)
-		this.intervalID = setInterval(function(map) {
-			done = map.step()
+		this.intervalID = setInterval(function(maze) {
+			done = maze.step()
 			if (done) {
-				map.clearInterval()
+				maze.clearInterval()
 			}
-			drawMap(map)
+			drawMaze(maze)
 		}, 1000/document.getElementById("ups").value, this)
 	}
 	if (this.isPathfinding) {
 		clearInterval(this.intervalID)
-		this.intervalID = setInterval(function(map) {
-			done = map.stepPathfind()
+		this.intervalID = setInterval(function(maze) {
+			done = maze.stepPathfind()
 			if (done) {
-				map.clearInterval()
+				maze.clearInterval()
 			}
-			drawMap(map)
+			drawMaze(maze)
 		}, 1000/document.getElementById("ups").value, this)
 	}
 }
 
-Map.listOpenAdjacents = function(x,y) {
+Maze.listOpenAdjacents = function(x,y) {
 	result = []
 	for (var i=0; i<DIRNAMES.length; i++) { 
 		dir = DIRNAMES[i]
@@ -272,7 +272,7 @@ Map.listOpenAdjacents = function(x,y) {
 	return result
 }
 
-Map.getStats = function() { //returns a 5-element array wher arr[n] is the number of cells with n exits
+Maze.getStats = function() { //returns a 5-element array wher arr[n] is the number of cells with n exits
 	stats = [0,0,0,0,0]
 	for (var x=0; x<this.width; x++) {
 		for (var y=0; y<this.height; y++) {
@@ -282,12 +282,12 @@ Map.getStats = function() { //returns a 5-element array wher arr[n] is the numbe
 	return stats
 }
 
-Map.startGenFunction = generateMazeGrowingTreeStart
-Map.stepFunction = generateMazeGrowingTreeStep
-Map.startPathfindFunction = startPathfindDepthFirst
-Map.stepPathfindFunction = stepPathfindDepthFirst
+Maze.startGenFunction = generateMazeGrowingTreeStart
+Maze.stepFunction = generateMazeGrowingTreeStep
+Maze.startPathfindFunction = startPathfindDepthFirst
+Maze.stepPathfindFunction = stepPathfindDepthFirst
 
-function drawMap(map) {
+function drawMaze(maze) {
 	var canvas=document.getElementById("mainCanvas");
 	var ctx=canvas.getContext("2d");
 	
@@ -302,61 +302,61 @@ function drawMap(map) {
 	var PATH_END_COLOUR = "#89009c"
 	var PATH_COLOUR = "#df03fc"
 
-	var CELL_WIDTH = Math.floor(canvas.width/map.width);
-	var CELL_HEIGHT = Math.floor(canvas.height/map.height);
+	var CELL_WIDTH = Math.floor(canvas.width/maze.width);
+	var CELL_HEIGHT = Math.floor(canvas.height/maze.height);
 
 
 	ctx.fillStyle = "#FFFFFF"
 	ctx.fillRect(0, 0, canvas.width, canvas.height)
 
 	ctx.fillStyle = VISITED_COLOUR
-	ctx.fillRect(0, 0, CELL_WIDTH*map.width, CELL_HEIGHT*map.height)
+	ctx.fillRect(0, 0, CELL_WIDTH*maze.width, CELL_HEIGHT*maze.height)
 
 	ctx.fillStyle = UNVISITED_COLOUR
-	for (var x=0; x<map.width; x++) {
-		for (var y=0; y<map.width; y++) {
-			if (!map.visited[x][y]) {
+	for (var x=0; x<maze.width; x++) {
+		for (var y=0; y<maze.width; y++) {
+			if (!maze.visited[x][y]) {
 				ctx.fillRect(x*CELL_WIDTH, y*CELL_HEIGHT, CELL_WIDTH, CELL_HEIGHT)
 			}
 		}
 	}
 
 	ctx.fillStyle = IN_LIST_COLOUR
-	for (var i=0; i<map.cellList.length; i++) {
-		c = map.cellList[i]
+	for (var i=0; i<maze.cellList.length; i++) {
+		c = maze.cellList[i]
 		ctx.fillRect(c[0]*CELL_WIDTH, c[1]*CELL_HEIGHT, CELL_WIDTH, CELL_HEIGHT)
 
 	}
 
 	ctx.fillStyle = LAST_CELL_COLOUR
-	ctx.fillRect(map.lastCellX*CELL_WIDTH, map.lastCellY*CELL_HEIGHT, CELL_WIDTH, CELL_HEIGHT)
+	ctx.fillRect(maze.lastCellX*CELL_WIDTH, maze.lastCellY*CELL_HEIGHT, CELL_WIDTH, CELL_HEIGHT)
 
 	ctx.fillStyle = WALL_COLOUR
-	for (var x=0; x<map.width; x++) {
-		for (var y=0; y<map.width; y++) {
-			if (map.hasWall(x,y,"N")) {
+	for (var x=0; x<maze.width; x++) {
+		for (var y=0; y<maze.width; y++) {
+			if (maze.hasWall(x,y,"N")) {
 				ctx.fillRect(x*CELL_WIDTH, y*CELL_HEIGHT, CELL_WIDTH, 1)
 			}
-			if (map.hasWall(x,y,"S")) {
+			if (maze.hasWall(x,y,"S")) {
 				ctx.fillRect(x*CELL_WIDTH, y*CELL_HEIGHT + CELL_HEIGHT-1, CELL_WIDTH, 1)
 			}
-			if (map.hasWall(x,y,"W")) {
+			if (maze.hasWall(x,y,"W")) {
 				ctx.fillRect(x*CELL_WIDTH, y*CELL_HEIGHT, 1, CELL_HEIGHT)
 			}
-			if (map.hasWall(x,y,"E")) {
+			if (maze.hasWall(x,y,"E")) {
 				ctx.fillRect(x*CELL_WIDTH + CELL_WIDTH-1, y*CELL_HEIGHT, 1, CELL_HEIGHT)
 			}
 		}
 	}
 
-	if (map.path.length > 0) {
+	if (maze.path.length > 0) {
 		ctx.strokeStyle = PATH_COLOUR
 		ctx.lineWidth = Math.max(1, CELL_WIDTH/4)
 		ctx.beginPath()
-		ctx.moveTo(map.path[0][0]*CELL_WIDTH + CELL_WIDTH/2, map.path[0][0]*CELL_HEIGHT + CELL_HEIGHT/2)
-		for (var i=1; i<map.path.length; i++) {
-			var x = map.path[i][0]*CELL_WIDTH + CELL_WIDTH/2
-			var y = map.path[i][1]*CELL_HEIGHT + CELL_HEIGHT/2
+		ctx.moveTo(maze.path[0][0]*CELL_WIDTH + CELL_WIDTH/2, maze.path[0][0]*CELL_HEIGHT + CELL_HEIGHT/2)
+		for (var i=1; i<maze.path.length; i++) {
+			var x = maze.path[i][0]*CELL_WIDTH + CELL_WIDTH/2
+			var y = maze.path[i][1]*CELL_HEIGHT + CELL_HEIGHT/2
 			ctx.lineTo(x,y)
 		}
 		ctx.stroke()
@@ -364,8 +364,8 @@ function drawMap(map) {
 
 		ctx.fillStyle = PATH_END_COLOUR
 		ctx.beginPath()
-		var x = map.path[map.path.length-1][0]*CELL_WIDTH + CELL_WIDTH/2
-		var y = map.path[map.path.length-1][1]*CELL_HEIGHT + CELL_HEIGHT/2
+		var x = maze.path[maze.path.length-1][0]*CELL_WIDTH + CELL_WIDTH/2
+		var y = maze.path[maze.path.length-1][1]*CELL_HEIGHT + CELL_HEIGHT/2
 		ctx.arc(x,y, CELL_WIDTH/4, 0, 2*Math.PI)
 		ctx.fill()
 		ctx.closePath()
@@ -373,13 +373,13 @@ function drawMap(map) {
 
 	ctx.fillStyle = PATH_START_COLOUR
 	ctx.beginPath()
-	ctx.arc(map.pathfindStartX*CELL_WIDTH + CELL_WIDTH/2, map.pathfindStartY*CELL_HEIGHT + CELL_HEIGHT/2, CELL_WIDTH/3, 0, 2*Math.PI)
+	ctx.arc(maze.pathfindStartX*CELL_WIDTH + CELL_WIDTH/2, maze.pathfindStartY*CELL_HEIGHT + CELL_HEIGHT/2, CELL_WIDTH/3, 0, 2*Math.PI)
 	ctx.fill()
 	ctx.closePath()
 
 	ctx.fillStyle = PATH_GOAL_COLOUR
 	ctx.beginPath()
-	ctx.arc(map.pathfindEndX*CELL_WIDTH + CELL_WIDTH/2, map.pathfindEndY*CELL_HEIGHT + CELL_HEIGHT/2, CELL_WIDTH/3, 0, 2*Math.PI)
+	ctx.arc(maze.pathfindEndX*CELL_WIDTH + CELL_WIDTH/2, maze.pathfindEndY*CELL_HEIGHT + CELL_HEIGHT/2, CELL_WIDTH/3, 0, 2*Math.PI)
 	ctx.fill()
 	ctx.closePath()
 
@@ -387,62 +387,62 @@ function drawMap(map) {
 }
 
 function generateStepwise() {
-	Map.clearInterval()
-	Map.isGenerating = true
-	Map.startGen()
-	drawMap(Map)
-	Map.intervalID = setInterval(function(map) {
-		done = map.step()
+	Maze.clearInterval()
+	Maze.isGenerating = true
+	Maze.startGen()
+	drawMaze(Maze)
+	Maze.intervalID = setInterval(function(maze) {
+		done = maze.step()
 		if (done) {
-			Map.clearInterval()
+			Maze.clearInterval()
 		}
-		drawMap(map)
-	}, 1000/document.getElementById("ups").value, Map)
+		drawMaze(maze)
+	}, 1000/document.getElementById("ups").value, Maze)
 }
 
 function generateAtOnce() {
-	Map.clearInterval()
-	Map.startGen()
+	Maze.clearInterval()
+	Maze.startGen()
 	done = false
 	while (!done) {
-		done = Map.step()
+		done = Maze.step()
 	}
-	Map.isGenerating = false
-	drawMap(Map)
+	Maze.isGenerating = false
+	drawMaze(Maze)
 }
 
 function pathfindStepwise() {
 	generateAtOnce()
 
-	Map.clearInterval()
-	Map.isPathfinding = true
-	Map.startPathfind(0, 0, Map.width-1, Map.height-1)
-	drawMap(Map)
-	Map.intervalID = setInterval(function(map) {
-		done = map.stepPathfind()
+	Maze.clearInterval()
+	Maze.isPathfinding = true
+	Maze.startPathfind(0, 0, Maze.width-1, Maze.height-1)
+	drawMaze(Maze)
+	Maze.intervalID = setInterval(function(maze) {
+		done = maze.stepPathfind()
 		if (done) {
-			Map.clearInterval()
+			Maze.clearInterval()
 		}
-		drawMap(map)
-	}, 1000/document.getElementById("ups").value, Map)
+		drawMaze(maze)
+	}, 1000/document.getElementById("ups").value, Maze)
 }
 
 function pathfindAtOnce() {
 	generateAtOnce()
 
-	Map.clearInterval()
-	Map.startPathfind(0, 0, Map.width-1, Map.height-1)
+	Maze.clearInterval()
+	Maze.startPathfind(0, 0, Maze.width-1, Maze.height-1)
 	done = false
 	while (!done) {
-		done = Map.stepPathfind()
+		done = Maze.stepPathfind()
 	}
-	Map.isPathfinding = false
-	Map.visitAll()
-	drawMap(Map)
+	Maze.isPathfinding = false
+	Maze.visitAll()
+	drawMaze(Maze)
 }
 
 function updateStats() {
-	var stats = Map.getStats()
+	var stats = Maze.getStats()
 	var txt = "The maze has "
 	txt += "<b>" + String(stats[0]) + "</b> enclosed cell[s], " 
 	txt += "<b>" + String(stats[1]) + "</b> dead end[s], " 
@@ -458,11 +458,11 @@ function updateAll() {
 	document.getElementById("sizeOut").innerHTML = String(size)+"x"+String(size)
 	document.getElementById("randomProbabilityOut").innerHTML = String(document.getElementById("randomProbability").value)+"%";
 	document.getElementById("upsOut").innerHTML = document.getElementById("ups").value;
-	Map.randomProbability = document.getElementById("randomProbability").value/100
-	Map.clearInterval()
-	Map.width = size
-	Map.height = size
-	Map.initialise()
+	Maze.randomProbability = document.getElementById("randomProbability").value/100
+	Maze.clearInterval()
+	Maze.width = size
+	Maze.height = size
+	Maze.initialise()
 
 	if (document.getElementById("autoGenerate").checked) {
 		generateAtOnce()
@@ -471,7 +471,7 @@ function updateAll() {
 		pathfindAtOnce()
 	}
 
-	drawMap(Map)
+	drawMaze(Maze)
 }
 
 document.getElementById("seed").value = "seed"
@@ -479,7 +479,7 @@ document.getElementById("seed").value = "seed"
 document.getElementById("size").addEventListener("input", updateAll);
 document.getElementById("randomProbability").addEventListener("input", updateAll);
 document.getElementById("ups").addEventListener("input", function() {
-	Map.updateUPS();
+	Maze.updateUPS();
 	document.getElementById("upsOut").innerHTML = document.getElementById("ups").value;
 });
 
@@ -519,4 +519,4 @@ document.getElementById("autoPathfind").addEventListener("change", function() {
 });
 
 updateAll()
-drawMap(Map)
+drawMaze(Maze)
