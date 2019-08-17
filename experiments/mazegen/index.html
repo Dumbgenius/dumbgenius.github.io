@@ -16,7 +16,9 @@
 		<input type=text id="seed"> <button id="randomSeed">Random seed!</button>
 		<br><input type=range id="size" min=5 max=50 value=50> Size: <span id="sizeOut"></span>
 		<br><input type=range id="randomProbability" min=0 max=100 value=20> Probability of random: <span id="randomProbabilityOut"></span>
-		<br><input type=range id="roomAttempts" min=10 max=200 value=40> Attempts to place rooms: <span id="roomAttemptsOut"></span>
+		<span id="dungeonSettings">
+			<br><input type=range id="roomAttempts" min=10 max=200 value=40> Attempts to place rooms: <span id="roomAttemptsOut"></span>
+		</span>
 		<br>
 		<br><input type=checkbox id="autoGenerate" checked>Regenerate on settings change
 		<br><input type=checkbox id="autoPathfind">Pathfind on settings change
@@ -51,7 +53,12 @@
 			<br>
 			When generating bit-by-bit, grey cells are unvisited, pink cells are on the list of selected cells, white cells are visited and not on the list, and the red cell is the most recently modified cell.<br>
 			<br>
-			Pathfinding is done via a simple depth-first search algorithm. Due to the way the maze is generated, loops are impossible, and so there is only ever one possible route from a given point A to point B, which means that the normal weakness of a depth-first search (the fact that it tends to find unnecessarily long routes) is not an issue.
+			Pathfinding is done via a simple depth-first search algorithm. Due to the way the maze is generated, loops are impossible, and so there is only ever one possible route from a given point A to point B, which means that the normal weakness of a depth-first search (the fact that it tends to find unnecessarily long routes) is not an issue. <br>
+			<br>
+			Tips: Pure mazes tend to look nicer with lower [probability of random], as it results in more winding corridors. Dungeon mode tends to look nicer with higher [probability of random] as it means the paths between rooms are less convoluted.<br>
+			<br>
+			NB: In Dungeon Mode, the pathfinder may wiggle about unnecessesarily in rooms, but since the maze should still be a perfect maze, the route should still be close enough to the shortest possible. <br>
+			<br>
 		</div>
 	<center>
 	

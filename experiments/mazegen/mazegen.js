@@ -559,7 +559,7 @@ function drawMaze(maze) {
 		ctx.strokeStyle = PATH_COLOUR
 		ctx.lineWidth = Math.max(1, CELL_WIDTH/4)
 		ctx.beginPath()
-		ctx.moveTo(maze.path[0][0]*CELL_WIDTH + CELL_WIDTH/2, maze.path[0][0]*CELL_HEIGHT + CELL_HEIGHT/2)
+		ctx.moveTo(maze.path[0][0]*CELL_WIDTH + CELL_WIDTH/2, maze.path[0][1]*CELL_HEIGHT + CELL_HEIGHT/2)
 		for (var i=1; i<maze.path.length; i++) {
 			var x = maze.path[i][0]*CELL_WIDTH + CELL_WIDTH/2
 			var y = maze.path[i][1]*CELL_HEIGHT + CELL_HEIGHT/2
@@ -611,6 +611,7 @@ function generateStepwise() {
 
 function generateAtOnce() {
 	if (Maze.dungeonMode) {
+		Maze.initialise(0b1111)
 		Maze.clearInterval()
 		Maze.addRooms()
 		Maze.generateFromFirstEnclosed()
@@ -648,7 +649,31 @@ function pathfindAtOnce() {
 	generateAtOnce()
 
 	Maze.clearInterval()
-	Maze.startPathfind(0, 0, Maze.width-1, Maze.height-1)
+
+	var startX = null
+	var startY = null
+	var endX = null
+	var endY = null
+
+	for (var x=0; x<Maze.width; x++) {
+		for (var y=0; y<Maze.height; y++) {
+			if (Maze.cells[x][y]!=0b1111) {
+				startX=x
+				startY=y
+			}
+		}
+	}
+
+	for (var x=Maze.width-1; x>=0; x--) {
+		for (var y=Maze.height-1; y>=0; y--) {
+			if (Maze.cells[x][y]!=0b1111) {
+				endX=x
+				endY=y
+			}
+		}
+	}
+
+	Maze.startPathfind(startX, startY, endX, endY)
 	done = false
 	while (!done) {
 		done = Maze.stepPathfind()
@@ -712,6 +737,8 @@ function updateAll() {
 	if (document.getElementById("autoPathfind").checked) {
 		pathfindAtOnce()
 	}
+
+	document.getElementById("dungeonSettings").hidden = !document.getElementById("dungeonMode").checked
 
 	drawMaze(Maze)
 }
@@ -785,7 +812,9 @@ document.getElementById("dungeonMode").addEventListener("change", function() {
 });
 
 document.getElementById("showStats").addEventListener("change", function() {
-	document.getElementById("statsOut").hidden = !document.getElementById("showStats").checked
+	var checked = document.getElementById("showStats").checked
+	document.getElementById("statsOut").hidden = !checked
+	if (checked) {updateStats()}
 });
 
 updateAll()
