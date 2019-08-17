@@ -176,6 +176,10 @@ Map.initialise = function(walls = 0b1111) {
 	this.pathfindStartY = -1
 	this.pathfindEndX = -1
 	this.pathfindEndY = -1
+
+	this.lastCellX = -1
+	this.lastCellY = -1
+	this.cellList = []
 }
 
 Map.visitAll = function() {
