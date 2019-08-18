@@ -145,7 +145,7 @@ function stepPathfindDepthFirst(maze) {
 	if (!advanced) {
 		maze.path.pop()
 		if (maze.path.length == 0) {
-			new Error("Error! Could not find path.")
+			throw new Error("Error! Could not find path.")
 			return true;
 		}
 	}
