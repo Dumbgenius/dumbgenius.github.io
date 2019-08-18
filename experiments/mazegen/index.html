@@ -51,7 +51,7 @@
 			<br>
 			When generating bit-by-bit, grey cells are unvisited, pink cells are on the list of selected cells, white cells are visited and not on the list, and the red cell is the most recently modified cell.<br>
 			<br>
-			Pathfinding is done via the A* algorithm, using the Manhattan heuristic multiplied by the greed factor above.<br>
+			Pathfinding is done via the A* algorithm, using the Manhattan heuristic multiplied by the greed factor above. Greed factors less than or equal to 1 are guaranteed to find the shortest path, but tend to be slower, as they cause A* to behave more like a breadth-first search - in fact, at a greed factor of 0, the algorithm is identical to a breadth-first search. Greed factors higher than 1 tend to be faster, but can find paths that are not the shortest possible, as the algorithm starts to perform more like a greedy best-first search.<br>
 			<br>
 			Tips: Pure mazes tend to look nicer with lower [probability of random], as it results in more winding corridors. Dungeon mode tends to look nicer with higher [probability of random] as it means the paths between rooms are less convoluted.<br>
 			<br>
