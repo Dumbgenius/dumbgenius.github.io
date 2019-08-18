@@ -58,19 +58,34 @@ function generateMazeGrowingTreeStart(maze, startX=null, startY=null, skipMazeIn
 	if (!skipMazeInit) {
 		maze.initialise(0b1111)
 	}
+
+	enclosed = []
+	for (var x=0; x<maze.width; x++) {
+		for (var y=0; y<maze.width; y++) {
+			if (maze.cells[x][y] == 0b1111) {
+				enclosed.push([x,y])
+			}
+		}
+	}
+	if (enclosed.length == 0) {
+		return false
+	}
+	var cell = enclosed[Math.floor(this.rng()*enclosed.length)]
+
 	if (startX == null) {
-		maze.startX = Math.floor(maze.rng()*maze.width)
+		maze.startX = cell[0]
 	} else {
 		maze.startX = startX
 	}
 
 	if (startY == null) {
-		maze.startY = Math.floor(maze.rng()*maze.height)
+		maze.startY = cell[1]
 	} else {
 		maze.startY = startY
 	}
 	maze.cellList = [[maze.startX, maze.startY]]
 	maze.visited[maze.startX][maze.startY] = true
+	return true
 }
 
 function generateMazeGrowingTreeStep(maze) {
@@ -173,6 +188,16 @@ Maze.isPathfinding = false
 Maze.rng = {}
 Maze.initialise = function(walls = 0b1111) {
 	this.rng = new Math.seedrandom(document.getElementById("seed").value);
+	this.roomAttempts = 0
+	this.interMazeAttempts = 0
+	this.MAX_ROOM_ATTEMPTS = document.getElementById("roomAttempts").value
+	this.MAX_INTER_MAZE_ATTEMPTS = this.MAX_ROOM_ATTEMPTS*4
+
+	if (this.dungeonMode) {
+		this.phase = "rooms"
+	} else {
+		this.phase = "mazegen"
+	}
 
 	this.cells = []
 	for (var x=0; x<this.width; x++) {
@@ -245,8 +270,8 @@ Maze.isNotOnEdge = function(x,y) {
 	return (x>=1)&&(y>=1)&&(x<this.width-1)&&(y<this.height-1)
 }
 
-Maze.startGen = function() {
-	return this.startGenFunction(this)
+Maze.startGen = function(...arguments) {
+	return this.startGenFunction(this, ...arguments)
 }
 
 Maze.startPathfind = function(startx, starty, endx, endy) {
@@ -260,7 +285,9 @@ Maze.setInterval = function(intervalFunction, ...arguments) {
 
 Maze.onTimeoutFunction = function(thisRef, intervalFunction, ...arguments) {
 	intervalFunction(...arguments)
-	thisRef.timeoutID = setTimeout(thisRef.onTimeoutFunction, thisRef.frameDelay, thisRef, intervalFunction, ...arguments)
+	if (thisRef.timeoutID != -1) { //in case intervalFunction wanted to clear the timeout
+		thisRef.timeoutID = setTimeout(thisRef.onTimeoutFunction, thisRef.frameDelay, thisRef, intervalFunction, ...arguments)
+	}
 }
 
 Maze.clearInterval = function() {
@@ -308,6 +335,26 @@ Maze.closeOffDeadEnds = function() {
 	return unchanged
 }
 
+Maze.closeOffOneDeadEnd = function() {
+	var unchanged = true
+	var deadEnds = []
+	for (var x=0; x<this.width; x++) {
+		for (var y=0; y<this.height; y++) {
+			if(/*this.isNotOnEdge(x,y) &&*/ this.listOpenAdjacents(x,y).length==1) {
+				deadEnds.push([x,y])
+				unchanged = false
+			}
+		}
+	}
+	if (deadEnds.length>0) {
+		var cell = deadEnds[Math.floor(this.rng()*deadEnds.length)]
+		for (var i=0; i<DIRNAMES.length; i++) { 
+			this.addWall(cell[0], cell[1], DIRNAMES[i])
+		}
+	}
+	return unchanged
+}
+
 Maze.closeOffAllDeadEnds = function() {
 	var done = false
 	while (!done) {
@@ -337,42 +384,41 @@ Maze.clearArea = function(left, top, right, bottom) {
 }
 
 Maze.addRooms = function() {
-	var MIN_DIM = 2
-	var MAX_DIM = Math.min(9, this.width, this.height)
 	var MAX_ATTEMPTS = document.getElementById("roomAttempts").value;
 
 	for (var i=0; i<MAX_ATTEMPTS; i++) {
-		var width = Math.floor(this.rng()*(MAX_DIM-MIN_DIM) + MIN_DIM)
-		var height = Math.floor(this.rng()*(MAX_DIM-MIN_DIM) + MIN_DIM)
-		var x = Math.floor(this.rng() * (this.width - width))
-		var y = Math.floor(this.rng() * (this.height - height))
-		var okayToPlace = true
-
-		for (var j=0; j<this.rooms.length; j++) {
-			if (rectanglesIntersect(x, y, x+width, y+height, this.rooms[j][0], this.rooms[j][1], this.rooms[j][2], this.rooms[j][3])) {
-				okayToPlace = false;
-			} 
-		}
-		
-		if (okayToPlace) {
-			this.rooms.push([x, y, x+width, y+height])
-			this.clearArea(x, y, x+width, y+height)
-		}
+		this.tryAddRoom()
 	}
 }
 
-Maze.generateFromFirstEnclosed = function() {
-	for (var x=0; x<this.width; x++) {
-		for (var y=0; y<this.height; y++) {
-			if (this.cells[x][y] == 0b1111) {
-				this.startGenFunction(this, x, y, true)
-				var done = false
-				while (!done) {
-					done = this.step()
-				}
-				return true
-			}
+Maze.tryAddRoom = function() {
+	var MIN_DIM = 2 //TODO: configuarability
+	var MAX_DIM = Math.min(9, this.width, this.height)
+	var width = Math.floor(this.rng()*(MAX_DIM-MIN_DIM) + MIN_DIM)
+	var height = Math.floor(this.rng()*(MAX_DIM-MIN_DIM) + MIN_DIM)
+	var x = Math.floor(this.rng() * (this.width - width))
+	var y = Math.floor(this.rng() * (this.height - height))
+	var okayToPlace = true
+
+	for (var j=0; j<this.rooms.length; j++) {
+		if (rectanglesIntersect(x, y, x+width, y+height, this.rooms[j][0], this.rooms[j][1], this.rooms[j][2], this.rooms[j][3])) {
+			okayToPlace = false;
+		} 
+	}
+	
+	if (okayToPlace) {
+		this.clearArea(x, y, x+width, y+height)
+		this.rooms.push([x, y, x+width, y+height])
+	}
+}
+
+Maze.generateFromRandomEnclosed = function() {
+	if (this.startGenFunction(this, null, null, true)) {
+		var done = false
+		while (!done) {
+			done = this.step()
 		}
+		return true
 	}
 	return false
 }
@@ -467,6 +513,7 @@ Maze.breakRandomBoundary = function() {
 			}
 		}
 	}
+	return true
 }
 
 Maze.breakAllBoundaries = function() {
@@ -594,17 +641,60 @@ function drawMaze(maze) {
 }
 
 function generateStepwise() {
-	Maze.clearInterval()
-	Maze.isGenerating = true
-	Maze.startGen()
-	drawMaze(Maze)
-	Maze.setInterval(function(maze) {
-		done = maze.step()
-		if (done) {
-			Maze.clearInterval()
-		}
-		drawMaze(maze)
-	}, Maze)
+	if (Maze.dungeonMode) {
+		Maze.initialise(0b1111)
+		Maze.clearInterval()
+		Maze.isGenerating = true
+		drawMaze(Maze)
+		Maze.setInterval(function(maze) {
+			if (maze.phase == "rooms") {
+				if (maze.roomAttempts<maze.MAX_ROOM_ATTEMPTS) {
+					maze.tryAddRoom()
+					maze.roomAttempts += 1
+				} else {
+					maze.phase = "mazecheck"
+				}
+			} else if (maze.phase == "mazecheck") {
+				maze.interMazeAttempts +=1
+				if (maze.startGen(null, null, true)) {
+					maze.phase = "mazegen"
+				}
+				if (maze.phase == "mazecheck" || maze.interMazeAttempts > maze.MAX_INTER_MAZE_ATTEMPTS) {
+					maze.phase = "removeBoundaries"
+					maze.computeZones()
+				}
+			} else if (maze.phase == "mazegen") {
+				var done = maze.step()
+				if (done) {
+					maze.phase = "mazecheck"
+				}
+			} else if (maze.phase == "removeBoundaries") {
+				var brokeABoundary = maze.breakRandomBoundary()
+				if (!brokeABoundary) {
+					maze.phase = "deadEnds"
+				}
+			} else if (maze.phase == "deadEnds") {
+				var done = maze.closeOffOneDeadEnd()
+				if (done) {
+					maze.phase = "done"
+					maze.clearInterval()
+				}
+			}
+			drawMaze(maze)
+		}, Maze)
+	} else {
+		Maze.clearInterval()
+		Maze.isGenerating = true
+		Maze.startGen()
+		drawMaze(Maze)
+		Maze.setInterval(function(maze) {
+			done = maze.step()
+			if (done) {
+				maze.clearInterval()
+			}
+			drawMaze(maze)
+		}, Maze)
+	}
 }
 
 function generateAtOnce() {
@@ -615,7 +705,7 @@ function generateAtOnce() {
 		var maxGenAttempts = document.getElementById("roomAttempts").value * 4
 		var count = 0
 		while (Maze.getStats()[0] > 0 && count<maxGenAttempts) { //i.e. while enclosed cells exist
-			Maze.generateFromFirstEnclosed()
+			Maze.generateFromRandomEnclosed()
 			count++; //to prevent it from getting stuck forever
 		}
 		Maze.breakAllBoundaries()
@@ -642,20 +732,24 @@ function pathfindStepwise() {
 	var endX = null
 	var endY = null
 
+	var found = false
 	for (var x=0; x<Maze.width; x++) {
 		for (var y=0; y<Maze.height; y++) {
-			if (Maze.cells[x][y]!=0b1111) {
+			if (Maze.cells[x][y]!=0b1111 && !found) {
 				startX=x
 				startY=y
+				found = true
 			}
 		}
 	}
 
+	found = false
 	for (var x=Maze.width-1; x>=0; x--) {
 		for (var y=Maze.height-1; y>=0; y--) {
-			if (Maze.cells[x][y]!=0b1111) {
+			if (Maze.cells[x][y]!=0b1111 && !found) {
 				endX=x
 				endY=y
+				found = true
 			}
 		}
 	}
