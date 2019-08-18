@@ -162,7 +162,7 @@ Maze.pathfindEndX = -1
 Maze.pathfindEndY = -1
 Maze.lastCellX = -1
 Maze.lastCellY = -1
-Maze.intervalID = -1
+Maze.timeoutID = -1
 Maze.randomProbability = 0
 Maze.visited = []
 Maze.cellList = []
@@ -202,6 +202,8 @@ Maze.initialise = function(walls = 0b1111) {
 	this.cellList = []
 
 	this.rooms = []
+
+	this.updateUPS()
 }
 
 Maze.visitAll = function() {
@@ -251,9 +253,19 @@ Maze.startPathfind = function(startx, starty, endx, endy) {
 	return this.startPathfindFunction(this, startx, starty, endx, endy, this.rng)
 }
 
+Maze.setInterval = function(intervalFunction, ...arguments) {
+	this.clearInterval()
+	this.timeoutID = setTimeout(this.onTimeoutFunction, this.frameDelay, this, intervalFunction, ...arguments)
+}
+
+Maze.onTimeoutFunction = function(thisRef, intervalFunction, ...arguments) {
+	intervalFunction(...arguments)
+	thisRef.timeoutID = setTimeout(thisRef.onTimeoutFunction, thisRef.frameDelay, thisRef, intervalFunction, ...arguments)
+}
+
 Maze.clearInterval = function() {
-	clearInterval(this.intervalID)
-	this.intervalID = -1
+	clearTimeout(this.timeoutID)
+	this.timeoutID = -1
 	this.isGenerating = false
 	this.isPathfinding = false
 }
@@ -267,26 +279,7 @@ Maze.stepPathfind = function() {
 }
 
 Maze.updateUPS = function() {
-	if (this.isGenerating) {
-		clearInterval(this.intervalID)
-		this.intervalID = setInterval(function(maze) {
-			done = maze.step()
-			if (done) {
-				maze.clearInterval()
-			}
-			drawMaze(maze)
-		}, 1000/document.getElementById("ups").value, this)
-	}
-	if (this.isPathfinding) {
-		clearInterval(this.intervalID)
-		this.intervalID = setInterval(function(maze) {
-			done = maze.stepPathfind()
-			if (done) {
-				maze.clearInterval()
-			}
-			drawMaze(maze)
-		}, 1000/document.getElementById("ups").value, this)
-	}
+	this.frameDelay = 1000/document.getElementById("ups").value, this
 }
 
 Maze.listOpenAdjacents = function(x,y) {
@@ -605,13 +598,13 @@ function generateStepwise() {
 	Maze.isGenerating = true
 	Maze.startGen()
 	drawMaze(Maze)
-	Maze.intervalID = setInterval(function(maze) {
+	Maze.setInterval(function(maze) {
 		done = maze.step()
 		if (done) {
 			Maze.clearInterval()
 		}
 		drawMaze(maze)
-	}, 1000/document.getElementById("ups").value, Maze)
+	}, Maze)
 }
 
 function generateAtOnce() {
@@ -669,13 +662,13 @@ function pathfindStepwise() {
 
 	Maze.startPathfind(startX, startY, endX, endY)
 	drawMaze(Maze)
-	Maze.intervalID = setInterval(function(maze) {
+	Maze.setInterval(function(maze) {
 		done = maze.stepPathfind()
 		if (done) {
 			Maze.clearInterval()
 		}
 		drawMaze(maze)
-	}, 1000/document.getElementById("ups").value, Maze)
+	}, Maze)
 }
 
 function pathfindAtOnce() {
