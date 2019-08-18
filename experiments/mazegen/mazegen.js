@@ -323,18 +323,18 @@ Maze.closeOffAllDeadEnds = function() {
 }
 
 Maze.clearArea = function(left, top, right, bottom) {
-	for (var x=left; x<right; x++) {
-		for (var y=top; y<bottom; y++) {
+	for (var x=left; x<=right; x++) {
+		for (var y=top; y<=bottom; y++) {
 			if(x>left) {
 				this.delWall(x, y, "W")
 			}
-			if(x<right-1) {
+			if(x<right) {
 				this.delWall(x, y, "E")
 			}
 			if(y>top) {
 				this.delWall(x, y, "N")
 			}
-			if(y<bottom-1) {
+			if(y<bottom) {
 				this.delWall(x, y, "S")
 			}
 
@@ -344,7 +344,7 @@ Maze.clearArea = function(left, top, right, bottom) {
 }
 
 Maze.addRooms = function() {
-	var MIN_DIM = 3
+	var MIN_DIM = 2
 	var MAX_DIM = Math.min(9, this.width, this.height)
 	var MAX_ATTEMPTS = document.getElementById("roomAttempts").value;
 
@@ -412,9 +412,14 @@ Maze.computeZones = function() {
 		for (var x=0; x<this.width && !foundStart; x++) {
 			for (var y=0; y<this.height && !foundStart; y++) {
 				if (this.zones[x][y] == -1) {
-					foundStart = true
-					activeCells = [[x,y]]
-					this.zones[x][y] = id
+					if (this.cells[x][y] == 0b1111) { //i.e. if enclosed
+						//don't count it as a new zone
+						this.zones[x][y] = -2
+					} else { //it's not enclosed, so count it as a zone
+						foundStart = true
+						activeCells = [[x,y]]
+						this.zones[x][y] = id
+					}
 				}
 			}
 		}
@@ -614,7 +619,12 @@ function generateAtOnce() {
 		Maze.initialise(0b1111)
 		Maze.clearInterval()
 		Maze.addRooms()
-		Maze.generateFromFirstEnclosed()
+		var maxGenAttempts = document.getElementById("roomAttempts").value * 4
+		var count = 0
+		while (Maze.getStats()[0] > 0 && count<maxGenAttempts) { //i.e. while enclosed cells exist
+			Maze.generateFromFirstEnclosed()
+			count++; //to prevent it from getting stuck forever
+		}
 		Maze.breakAllBoundaries()
 		Maze.closeOffAllDeadEnds()
 	} else {
