@@ -641,10 +641,33 @@ function generateAtOnce() {
 
 function pathfindStepwise() {
 	generateAtOnce()
-
 	Maze.clearInterval()
 	Maze.isPathfinding = true
-	Maze.startPathfind(0, 0, Maze.width-1, Maze.height-1)
+
+	var startX = null
+	var startY = null
+	var endX = null
+	var endY = null
+
+	for (var x=0; x<Maze.width; x++) {
+		for (var y=0; y<Maze.height; y++) {
+			if (Maze.cells[x][y]!=0b1111) {
+				startX=x
+				startY=y
+			}
+		}
+	}
+
+	for (var x=Maze.width-1; x>=0; x--) {
+		for (var y=Maze.height-1; y>=0; y--) {
+			if (Maze.cells[x][y]!=0b1111) {
+				endX=x
+				endY=y
+			}
+		}
+	}
+
+	Maze.startPathfind(startX, startY, endX, endY)
 	drawMaze(Maze)
 	Maze.intervalID = setInterval(function(maze) {
 		done = maze.stepPathfind()
