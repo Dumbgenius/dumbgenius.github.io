@@ -166,16 +166,16 @@ Maze.prototype.draw = function(canvas) {
 	for (var x=0; x<this.width; x++) {
 		for (var y=0; y<this.height; y++) {
 			if (this.cells[x][y] & DIRS["N"]) {
-				ctx.fillRect(Math.floor(x*CELL_WIDTH), Math.floor(y*CELL_HEIGHT), Math.floor(CELL_WIDTH), 1)
+				ctx.fillRect(Math.round(x*CELL_WIDTH), Math.round(y*CELL_HEIGHT), Math.round((x+1)*CELL_WIDTH)-Math.round(x*CELL_WIDTH), 1)
 			}
 			if (this.cells[x][y] & DIRS["S"]) {
-				ctx.fillRect(Math.floor(x*CELL_WIDTH), Math.floor(y*CELL_HEIGHT + CELL_HEIGHT-1), Math.floor(CELL_WIDTH), 1)
+				ctx.fillRect(Math.round(x*CELL_WIDTH), Math.round(y*CELL_HEIGHT + CELL_HEIGHT-1), Math.round((x+1)*CELL_WIDTH)-Math.round(x*CELL_WIDTH), 1)
 			}
 			if (this.cells[x][y] & DIRS["W"]) {
-				ctx.fillRect(Math.floor(x*CELL_WIDTH), Math.floor(y*CELL_HEIGHT), 1, Math.floor(CELL_HEIGHT))
+				ctx.fillRect(Math.round(x*CELL_WIDTH), Math.round(y*CELL_HEIGHT), 1, Math.round((y+1)*CELL_HEIGHT)-Math.round(y*CELL_HEIGHT))
 			}
 			if (this.cells[x][y] & DIRS["E"]) {
-				ctx.fillRect(Math.floor(x*CELL_WIDTH + CELL_WIDTH-1), Math.floor(y*CELL_HEIGHT), 1, Math.floor(CELL_HEIGHT))
+				ctx.fillRect(Math.round(x*CELL_WIDTH + CELL_WIDTH-1), Math.round(y*CELL_HEIGHT), 1, Math.round((y+1)*CELL_HEIGHT)-Math.round(y*CELL_HEIGHT))
 			}
 		}
 	}
@@ -190,9 +190,13 @@ Game = {}
 Game.path = [[0,0]]
 Game.mazeDrawn = false
 Game.dragging = false
-Game.state = "maze"
+Game.state = "starting"
 
 Game.update = function() {
+	if (this.state == "starting") {
+		this.transitionStartTime = Date.now()
+		this.state = "maze"
+	}
 	if (this.state == "maze") {
 		this.goalX = this.maze.width-1
 		this.goalY = this.maze.height-1
@@ -214,7 +218,7 @@ Game.update = function() {
 }
 
 Game.draw = function() {
-	if (this.state == "maze" || this.state == "transition1" || this.state == "transition2") {
+	if (this.state == "maze" || this.state == "transition1") {
 		if (!this.mazeDrawn) {
 			this.maze.draw(this.mazeCanvas)
 			this.mazeDrawn = true
@@ -350,3 +354,4 @@ Game.canvas.addEventListener("touchend", function(e) {Game.mouseup(e.changedTouc
 Game.canvas.addEventListener("touchmove", function(e) {Game.mousemove(e.changedTouches[0].clientX, e.changedTouches[0].clientY)})
 
 
+screen.orientation.lock("portrait")
