@@ -388,11 +388,3 @@ Game.canvas.addEventListener("touchstart", function(e) {Game.mousedown(e.changed
 Game.canvas.addEventListener("touchend", function(e) {Game.mouseup(e.changedTouches[0].clientX, e.changedTouches[0].clientY)})
 Game.canvas.addEventListener("touchmove", function(e) {Game.mousemove(e.changedTouches[0].clientX, e.changedTouches[0].clientY)})
 Game.canvas.addEventListener("resize", function(e) {Game.resize()})
-
-we_know_that_were_not_in_a_webapp = false
-document.addEventListener("scroll", function(e) {
-	if (!we_know_that_were_not_in_a_webapp) {
-		alert("Add this page to your home screen for a better experience! (It won't scroll weirdly anymore)")
-		we_know_that_were_not_in_a_webapp = true
-	}
-})
