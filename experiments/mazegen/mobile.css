@@ -24,11 +24,10 @@
 
 body {
 	margin: 0px;
+	overscroll-behavior: none;
 }
 
 #mainCanvas {
 	display: block;
 }
-
-.wrapper { overscroll-behavior: none }
 
