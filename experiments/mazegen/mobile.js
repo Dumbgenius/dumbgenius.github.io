@@ -295,9 +295,9 @@ Game.draw = function() {
 			ctx.fillStyle = FLOOR_COLOUR
 
 			var sizeAdd = Math.max(this.canvas.height, this.canvas.width) * ((Date.now() - this.transitionStartTime)/1000) * ((Date.now() - this.transitionStartTime)/1000) * 1.6
-			var sizeFactor = (sizeAdd / (this.CELL_SIZE/3)) + 1;
+			var sizeFactor = (sizeAdd / (this.CELL_SIZE)) + 1;
 
-			ctx.lineWidth = Math.min(this.CELL_WIDTH/5, sizeFactor*this.CELL_HEIGHT/5)
+			ctx.lineWidth = sizeFactor*Math.min(this.CELL_WIDTH/5, this.CELL_HEIGHT/5)
 			ctx.beginPath()
 			ctx.arc(this.goalX*this.CELL_WIDTH + this.CELL_WIDTH/2, this.goalY*this.CELL_HEIGHT + this.CELL_HEIGHT/2, sizeAdd + this.CELL_SIZE/3, 0, 2*Math.PI)
 			ctx.stroke()
@@ -359,7 +359,7 @@ Game.mousemove = function(x, y) {
 	}
 }
 
-Game.resize = function() {
+Game.resize = function() { //TODO: make this detect if it's actually an orientation change???
 	resizeCanvasToDisplaySize(this.canvas)
 	this.mazeCanvas.width = this.canvas.width
 	this.mazeCanvas.height = this.canvas.height
