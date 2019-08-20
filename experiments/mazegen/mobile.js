@@ -6,6 +6,8 @@ const END_COLOUR = "#df03fc"
 
 const MAZEGEN_PROB_OF_RANDOM = 0.1
 const CELL_SIZE_TARGET = 45
+const MAX_MAZE_DIMENSION = 20
+const MAX_ACCEPTABLE_DIMENSION_PROPORTION = 1.3
 
 const DIRNAMES = ["N", "E", "S", "W"]
 const DIRS = {
@@ -194,9 +196,30 @@ Game.mazeDrawn = false
 Game.dragging = false
 Game.state = "starting"
 
+Game.newMaze = function() {
+	var width = Math.floor(this.canvas.width/CELL_SIZE_TARGET)
+	var height = Math.floor(this.canvas.height/CELL_SIZE_TARGET)
+
+	if (width > height && width > MAX_MAZE_DIMENSION) {
+		width = MAX_MAZE_DIMENSION
+		var csize = this.canvas.width / width
+		height = Math.floor(this.canvas.height/csize)
+	}
+	if (height > width && height > MAX_MAZE_DIMENSION) {
+		height = MAX_MAZE_DIMENSION
+		var csize = this.canvas.height / height
+		width = Math.floor(this.canvas.width/csize)
+	}
+
+	this.maze = new Maze(width, height)
+	this.mazeDrawn = false
+	this.path = [[0,0]]
+}
+
 Game.update = function() {
 	if (this.state == "starting") {
 		this.transitionStartTime = Date.now()
+		this.newMaze()
 		this.state = "maze"
 	}
 	if (this.state == "maze") {
@@ -210,9 +233,7 @@ Game.update = function() {
 	}
 	if (this.state == "transition1") {
 		if (Date.now() - this.transitionStartTime > 1000) {
-			this.maze = new Maze(Math.floor(this.canvas.width/CELL_SIZE_TARGET), Math.floor(this.canvas.height/CELL_SIZE_TARGET))
-			this.mazeDrawn = false
-			this.path = [[0,0]]
+			this.newMaze()
 			this.state = "maze"
 			this.transitionStartTime = Date.now()
 		}
@@ -339,10 +360,16 @@ Game.mousemove = function(x, y) {
 }
 
 Game.resize = function() {
-	resizeCanvasToDisplaySize(Game.canvas)
-	Game.mazeCanvas.width = Game.canvas.width
-	Game.mazeCanvas.height = Game.canvas.height
-	Game.mazeDrawn = false
+	resizeCanvasToDisplaySize(this.canvas)
+	this.mazeCanvas.width = this.canvas.width
+	this.mazeCanvas.height = this.canvas.height
+	this.mazeDrawn = false
+
+	this.CELL_WIDTH = this.canvas.width/this.maze.width;
+	this.CELL_HEIGHT = this.canvas.height/this.maze.height;
+	if (this.CELL_WIDTH/this.CELL_HEIGHT > MAX_ACCEPTABLE_DIMENSION_PROPORTION || this.CELL_HEIGHT/this.CELL_WIDTH > MAX_ACCEPTABLE_DIMENSION_PROPORTION) {
+		this.state = "starting" //restart, it's gonna look horrible
+	}
 }
 
 /********************/
@@ -350,12 +377,9 @@ Game.resize = function() {
 /********************/
 
 Game.canvas = document.getElementById("mainCanvas")
-resizeCanvasToDisplaySize(Game.canvas)
 Game.mazeCanvas = document.createElement("canvas")
-Game.mazeCanvas.width = Game.canvas.width
-Game.mazeCanvas.height = Game.canvas.height
-Game.maze = new Maze(Math.floor(Game.canvas.width/CELL_SIZE_TARGET), Math.floor(Game.canvas.height/CELL_SIZE_TARGET))
 Game.update()
+Game.resize()
 
 setInterval(function() {Game.update()}, 1000/60)
 setInterval(function() {Game.draw()}, 1000/60)
@@ -364,5 +388,3 @@ Game.canvas.addEventListener("touchstart", function(e) {Game.mousedown(e.changed
 Game.canvas.addEventListener("touchend", function(e) {Game.mouseup(e.changedTouches[0].clientX, e.changedTouches[0].clientY)})
 Game.canvas.addEventListener("touchmove", function(e) {Game.mousemove(e.changedTouches[0].clientX, e.changedTouches[0].clientY)})
 Game.canvas.addEventListener("resize", function(e) {Game.resize()})
-
-screen.orientation.lock("portrait")
