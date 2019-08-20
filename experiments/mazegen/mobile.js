@@ -4,7 +4,9 @@ const PATH_COLOUR = "#8c1db5"
 const GOAL_COLOUR = "#8c1db5"
 const END_COLOUR = "#df03fc"
 
-const MAZEGEN_PROB_OF_RANDOM = 0.2
+const MAZEGEN_PROB_OF_RANDOM = 0.1
+const CELL_SIZE_TARGET = 45
+
 const DIRNAMES = ["N", "E", "S", "W"]
 const DIRS = {
 	"N":0b0001, 
@@ -208,7 +210,7 @@ Game.update = function() {
 	}
 	if (this.state == "transition1") {
 		if (Date.now() - this.transitionStartTime > 1000) {
-			this.maze = new Maze(this.maze.width, this.maze.height)
+			this.maze = new Maze(Math.floor(this.canvas.width/CELL_SIZE_TARGET), Math.floor(this.canvas.height/CELL_SIZE_TARGET))
 			this.mazeDrawn = false
 			this.path = [[0,0]]
 			this.state = "maze"
@@ -218,6 +220,10 @@ Game.update = function() {
 }
 
 Game.draw = function() {
+	if (resizeCanvasToDisplaySize(Game.canvas)) {
+		this.resize()
+	}
+
 	if (this.state == "maze" || this.state == "transition1") {
 		if (!this.mazeDrawn) {
 			this.maze.draw(this.mazeCanvas)
@@ -226,14 +232,15 @@ Game.draw = function() {
 
 		this.CELL_WIDTH = this.canvas.width/this.maze.width;
 		this.CELL_HEIGHT = this.canvas.height/this.maze.height;
+		this.CELL_SIZE = Math.min(this.CELL_WIDTH, this.CELL_HEIGHT)
 
 		var ctx = this.canvas.getContext("2d")
 		ctx.drawImage(this.mazeCanvas, 0, 0)
 
 		ctx.strokeStyle = GOAL_COLOUR
-		ctx.lineWidth = Math.min(this.CELL_WIDTH/5, this.CELL_HEIGHT/5)
+		ctx.lineWidth = this.CELL_SIZE/5
 		ctx.beginPath()
-		ctx.arc(this.goalX*this.CELL_WIDTH + this.CELL_WIDTH/2, this.goalY*this.CELL_HEIGHT + this.CELL_HEIGHT/2, this.CELL_WIDTH/3, 0, 2*Math.PI)
+		ctx.arc(this.goalX*this.CELL_WIDTH + this.CELL_WIDTH/2, this.goalY*this.CELL_HEIGHT + this.CELL_HEIGHT/2, this.CELL_SIZE/3, 0, 2*Math.PI)
 		ctx.stroke()
 		ctx.closePath()
 
@@ -251,14 +258,14 @@ Game.draw = function() {
 
 		ctx.fillStyle = PATH_COLOUR
 		ctx.beginPath()
-		ctx.arc(this.CELL_WIDTH/2, this.CELL_HEIGHT/2, this.CELL_WIDTH/3.1, 0, 2*Math.PI)
+		ctx.arc(this.CELL_WIDTH/2, this.CELL_HEIGHT/2, this.CELL_SIZE/3.1, 0, 2*Math.PI)
 		ctx.fill()
 		ctx.closePath()
 
 		ctx.fillStyle = END_COLOUR
 		var lastPath = this.path[this.path.length-1]
 		ctx.beginPath()
-		ctx.arc(lastPath[0]*this.CELL_WIDTH + this.CELL_WIDTH/2, lastPath[1]*this.CELL_HEIGHT + this.CELL_HEIGHT/2, this.CELL_WIDTH/3, 0, 2*Math.PI)
+		ctx.arc(lastPath[0]*this.CELL_WIDTH + this.CELL_WIDTH/2, lastPath[1]*this.CELL_HEIGHT + this.CELL_HEIGHT/2, this.CELL_SIZE/3, 0, 2*Math.PI)
 		ctx.fill()
 		ctx.closePath()
 
@@ -266,12 +273,12 @@ Game.draw = function() {
 			ctx.strokeStyle = GOAL_COLOUR
 			ctx.fillStyle = FLOOR_COLOUR
 
-			var sizeAdd = this.canvas.height * ((Date.now() - this.transitionStartTime)/1000) * ((Date.now() - this.transitionStartTime)/1000) * 1.6
-			var sizeFactor = (sizeAdd / (this.CELL_WIDTH/3)) + 1;
+			var sizeAdd = Math.max(this.canvas.height, this.canvas.width) * ((Date.now() - this.transitionStartTime)/1000) * ((Date.now() - this.transitionStartTime)/1000) * 1.6
+			var sizeFactor = (sizeAdd / (this.CELL_SIZE/3)) + 1;
 
 			ctx.lineWidth = Math.min(this.CELL_WIDTH/5, sizeFactor*this.CELL_HEIGHT/5)
 			ctx.beginPath()
-			ctx.arc(this.goalX*this.CELL_WIDTH + this.CELL_WIDTH/2, this.goalY*this.CELL_HEIGHT + this.CELL_HEIGHT/2, sizeAdd + this.CELL_WIDTH/3, 0, 2*Math.PI)
+			ctx.arc(this.goalX*this.CELL_WIDTH + this.CELL_WIDTH/2, this.goalY*this.CELL_HEIGHT + this.CELL_HEIGHT/2, sizeAdd + this.CELL_SIZE/3, 0, 2*Math.PI)
 			ctx.stroke()
 			ctx.fill()
 			ctx.closePath()
@@ -331,12 +338,16 @@ Game.mousemove = function(x, y) {
 	}
 }
 
+Game.resize = function() {
+	resizeCanvasToDisplaySize(Game.canvas)
+	Game.mazeCanvas.width = Game.canvas.width
+	Game.mazeCanvas.height = Game.canvas.height
+	Game.mazeDrawn = false
+}
 
 /********************/
 /* LET'S GET GAMING */
 /********************/
-
-const CELL_SIZE_TARGET = 50
 
 Game.canvas = document.getElementById("mainCanvas")
 resizeCanvasToDisplaySize(Game.canvas)
@@ -352,6 +363,6 @@ setInterval(function() {Game.draw()}, 1000/60)
 Game.canvas.addEventListener("touchstart", function(e) {Game.mousedown(e.changedTouches[0].clientX, e.changedTouches[0].clientY)})
 Game.canvas.addEventListener("touchend", function(e) {Game.mouseup(e.changedTouches[0].clientX, e.changedTouches[0].clientY)})
 Game.canvas.addEventListener("touchmove", function(e) {Game.mousemove(e.changedTouches[0].clientX, e.changedTouches[0].clientY)})
-
+Game.canvas.addEventListener("resize", function(e) {Game.resize()})
 
 screen.orientation.lock("portrait")
