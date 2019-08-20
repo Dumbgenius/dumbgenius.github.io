@@ -160,22 +160,22 @@ Maze.prototype.draw = function(canvas) {
 	var CELL_HEIGHT = canvas.height/this.height;
 
 	ctx.fillStyle = FLOOR_COLOUR
-	ctx.fillRect(0, 0, CELL_WIDTH*this.width, CELL_HEIGHT*this.height)
+	ctx.fillRect(0, 0, canvas.width, canvas.height)
 
 	ctx.fillStyle = WALL_COLOUR
 	for (var x=0; x<this.width; x++) {
 		for (var y=0; y<this.height; y++) {
 			if (this.cells[x][y] & DIRS["N"]) {
-				ctx.fillRect(x*CELL_WIDTH, y*CELL_HEIGHT, CELL_WIDTH, 1)
+				ctx.fillRect(Math.floor(x*CELL_WIDTH), Math.floor(y*CELL_HEIGHT), Math.floor(CELL_WIDTH), 1)
 			}
 			if (this.cells[x][y] & DIRS["S"]) {
-				ctx.fillRect(x*CELL_WIDTH, y*CELL_HEIGHT + CELL_HEIGHT-1, CELL_WIDTH, 1)
+				ctx.fillRect(Math.floor(x*CELL_WIDTH), Math.floor(y*CELL_HEIGHT + CELL_HEIGHT-1), Math.floor(CELL_WIDTH), 1)
 			}
 			if (this.cells[x][y] & DIRS["W"]) {
-				ctx.fillRect(x*CELL_WIDTH, y*CELL_HEIGHT, 1, CELL_HEIGHT)
+				ctx.fillRect(Math.floor(x*CELL_WIDTH), Math.floor(y*CELL_HEIGHT), 1, Math.floor(CELL_HEIGHT))
 			}
 			if (this.cells[x][y] & DIRS["E"]) {
-				ctx.fillRect(x*CELL_WIDTH + CELL_WIDTH-1, y*CELL_HEIGHT, 1, CELL_HEIGHT)
+				ctx.fillRect(Math.floor(x*CELL_WIDTH + CELL_WIDTH-1), Math.floor(y*CELL_HEIGHT), 1, Math.floor(CELL_HEIGHT))
 			}
 		}
 	}
