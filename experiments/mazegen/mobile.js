@@ -169,13 +169,13 @@ Maze.prototype.draw = function(canvas) {
 				ctx.fillRect(Math.round(x*CELL_WIDTH), Math.round(y*CELL_HEIGHT), Math.round((x+1)*CELL_WIDTH)-Math.round(x*CELL_WIDTH), 1)
 			}
 			if (this.cells[x][y] & DIRS["S"]) {
-				ctx.fillRect(Math.round(x*CELL_WIDTH), Math.round(y*CELL_HEIGHT + CELL_HEIGHT-1), Math.round((x+1)*CELL_WIDTH)-Math.round(x*CELL_WIDTH), 1)
+				ctx.fillRect(Math.round(x*CELL_WIDTH), Math.round((y+1)*CELL_HEIGHT -1), Math.round((x+1)*CELL_WIDTH)-Math.round(x*CELL_WIDTH), 1)
 			}
 			if (this.cells[x][y] & DIRS["W"]) {
 				ctx.fillRect(Math.round(x*CELL_WIDTH), Math.round(y*CELL_HEIGHT), 1, Math.round((y+1)*CELL_HEIGHT)-Math.round(y*CELL_HEIGHT))
 			}
 			if (this.cells[x][y] & DIRS["E"]) {
-				ctx.fillRect(Math.round(x*CELL_WIDTH + CELL_WIDTH-1), Math.round(y*CELL_HEIGHT), 1, Math.round((y+1)*CELL_HEIGHT)-Math.round(y*CELL_HEIGHT))
+				ctx.fillRect(Math.round((x+1)*CELL_WIDTH -1), Math.round(y*CELL_HEIGHT), 1, Math.round((y+1)*CELL_HEIGHT)-Math.round(y*CELL_HEIGHT))
 			}
 		}
 	}
