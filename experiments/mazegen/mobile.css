@@ -1,6 +1,7 @@
 body {
 	margin: 0px;
 	overscroll-behavior: none;
+	overflow: hidden
 }
 
 #mainCanvas {
