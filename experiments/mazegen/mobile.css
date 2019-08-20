@@ -29,3 +29,6 @@ body {
 #mainCanvas {
 	display: block;
 }
+
+.wrapper { overscroll-behavior: none }
+
