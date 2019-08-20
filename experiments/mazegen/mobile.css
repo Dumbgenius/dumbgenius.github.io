@@ -5,6 +5,7 @@ body {
 }
 
 #mainCanvas {
+	position: fixed;
 	display: block;
 	height: 100vh;
 	width: 100vw;
