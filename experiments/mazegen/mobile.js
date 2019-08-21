@@ -1,3 +1,14 @@
+//TODO LIST:
+// - animate the path so it move smoothly between cells
+// - make the settings wheel actually work
+//		- maze wiggliness: prob of random = (1-wiggliness)^1.5ish?
+//		- change colours
+//		- change cell size (with preview, preferably)
+//		- reset high score
+// - make the maze time taken timer only start when you start dragging
+// - figure out how to make the maze timer stop timing when the window loses focus
+
+
 const WALL_COLOUR = "#000000"
 const FLOOR_COLOUR = "#FFFFFF"
 const PATH_COLOUR = "#8c1db5"
@@ -9,7 +20,7 @@ const CELL_SIZE_TARGET = 45
 const MAX_MAZE_DIMENSION = 20
 const MAX_ACCEPTABLE_DIMENSION_PROPORTION = 1.3
 
-const TAP_DURATION = 500 //milliseconds
+const TAP_THRESHOLD = 500 //milliseconds
 const DEBOUNCE_DURATION = 5 //milliseconds
 
 const COMPLETION_MESSAGES = [
@@ -17,7 +28,9 @@ const COMPLETION_MESSAGES = [
 	"Excellent!",
 	"Awesome!",
 	"Great!",
-	"Fantastic!"
+	"Fantastic!",
+	"Groovy!",
+	"Neato!"
 ]
 
 
@@ -58,10 +71,6 @@ function shuffled(l, rng = Math.random) {
 
 function pickRandom(arr, rng = Math.random) {
 	return arr[Math.floor(rng() * arr.length)]
-}
-
-function round(value, decimals=0) {
-  return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
 }
 
 function getTotalOffset(e) {
@@ -281,8 +290,6 @@ Game.registerState = function(name, enterFunction, updateFunction, leaveFunction
 }
 
 Game.changeState = function(newState) {
-	console.log(this.state + "->" + newState)
-
 	if (this.states[name] === undefined) {
 		throw new Error("State " + newState + "does not exist")
 		return false
@@ -404,7 +411,7 @@ Game.mousedown = function(x, y) {
 Game.mouseup = function(x, y) {
 	this.dragging = false
 	var tapDuration = Date.now()-this.clickStartTime
-	if (tapDuration < TAP_DURATION && tapDuration > DEBOUNCE_DURATION) {
+	if (tapDuration < TAP_THRESHOLD && tapDuration > DEBOUNCE_DURATION) {
 		var cellX = Math.floor(x/this.CELL_WIDTH)
 		var cellY = Math.floor(y/this.CELL_HEIGHT)
 		var startCellX = Math.floor(this.clickStartX/this.CELL_WIDTH)
@@ -449,7 +456,7 @@ Game.resize = function() { //TODO: make this detect if it's actually an orientat
 	this.mazeCanvas.height = this.canvas.height
 	this.mazeDrawn = false
 
-	if (this.maze !== undefined) {
+	if (this.state == "maze") {
 		this.CELL_WIDTH = this.canvas.width/this.maze.width;
 		this.CELL_HEIGHT = this.canvas.height/this.maze.height;
 		if (this.CELL_WIDTH/this.CELL_HEIGHT > MAX_ACCEPTABLE_DIMENSION_PROPORTION || this.CELL_HEIGHT/this.CELL_WIDTH > MAX_ACCEPTABLE_DIMENSION_PROPORTION) {
@@ -508,12 +515,57 @@ Game.registerState("showScore",
 		$(".showScore").fadeIn()
 		$("#congratsSpan").html(pickRandom(COMPLETION_MESSAGES))
 		$("#scoreSpan1").html("Finished in")
-		$("#scoreNumberSpan").html(round(thisRef.mazeTimeTaken/1000, 1))
+		$("#scoreNumberSpan").html((thisRef.mazeTimeTaken/1000).toFixed(1))
 		$("#scoreSpan2").html("seconds")
 	},
 	null,
+	function(thisRef) {
+		$(".showScore").fadeOut()
+	})
+
+Game.registerState("transitionScoreToMaze",
+	null,
+	function(thisRef) {
+		if ($(".showScore").css("display") == "none") {
+			thisRef.changeState("maze")
+		}
+	},
 	null)
 
+/******************/
+/* BUTTON MANAGER */
+/******************/
+
+ButtonManager = {}
+ButtonManager.buttons = {}
+ButtonManager.down = function(buttonName){
+	if (this.buttons[buttonName]===undefined) {
+		throw new Error("Button " + buttonName + " does not exist")
+		return false
+	}
+	this.buttons[buttonName].timeDown = Date.now()
+}
+
+ButtonManager.up = function(buttonName) {
+	if (this.buttons[buttonName]===undefined) {
+		throw new Error("Button " + buttonName + " does not exist")
+		return false
+	}
+	var now = Date.now()
+	if (now-this.buttons[buttonName].timeDown < TAP_THRESHOLD && now-this.buttons[buttonName].timeDown > DEBOUNCE_DURATION) {
+		this.buttons[buttonName].pressed()
+	}
+	this.buttons[buttonName].timeDown = 0
+}
+
+ButtonManager.registerButton = function(buttonName, onPressFunction) {
+	if (this.buttons[buttonName]!==undefined) {
+		throw new Error("Button " + buttonName + " already exists")
+		return false
+	}
+	this.buttons[buttonName] = {pressed:onPressFunction, timeDown:0}
+	return true
+}
 
 /********************/
 /* LET'S GET GAMING */
@@ -534,3 +586,11 @@ Game.canvas.addEventListener("mousedown",  function(e) {var offset=getTotalOffse
 Game.canvas.addEventListener("mousemove",  function(e) {var offset=getTotalOffset(e); Game.mousemove(e.clientX - offset.x, e.clientY - offset.y)})
 Game.canvas.addEventListener("mouseup",    function(e) {var offset=getTotalOffset(e); Game.mouseup  (e.clientX - offset.x, e.clientY - offset.y)})
 Game.canvas.addEventListener("resize", function(e) {Game.resize()})
+
+//this is hacky, but should help it actually work hopefully. TODO: see if it can be done less hackily.
+$(".initiallyHiddenBlock").css("display", "block").hide() 
+$(".initiallyHiddenInlineBlock").css("display", "inline-block").hide() 
+
+ButtonManager.registerButton("scoreContinueButton", function() {Game.changeState("transitionScoreToMaze")})
+$("#scoreContinueButton").on("mousedown touchstart", function() {ButtonManager.down("scoreContinueButton")})
+$("#scoreContinueButton").on("mouseup touchend", function() {ButtonManager.up("scoreContinueButton")})

@@ -3,6 +3,10 @@
 	font-size: 30px;
 }
 
+.initiallyHiddenBlock, .initiallyHiddenInlineBlock {
+	display: none;
+}
+
 body {
 	margin: 0px;
 	overscroll-behavior: none;
@@ -55,20 +59,47 @@ body {
 	pointer-events: auto;
 }
 
-.showScore {
+.centered {
 	text-align: center;
-	display:block;
+}
+
+.showScore {
+	user-select: none;
+}
+
+.fancyButton {
+	user-select: none;
+	background-color: #00BCD4;
+	padding: 15px;
+	border-radius: 10px;
+	margin: auto
+	box-shadow: 1px 1px 3px 0px black;
+	cursor: pointer;
+
+	transition: transform 150ms;
+}
+
+.fancyButton:hover {
+     transform:scale(1.05);
+}
+
+.fancyButton:active {
+     transform:scale(.95);
 }
 
 #congratsSpan {
 	font-size: 50px;
 	margin-top: 20vh;
-	margin-bottom: 10vh;
+	margin-bottom: 5vh;
 }
 
 #scoreNumberSpan {
 	font-size: 60px;
 	font-weight: bold;
+}
+
+#scoreSpan2 {
+	margin-bottom: 5vh;
 }
 
 .settingsIcon {

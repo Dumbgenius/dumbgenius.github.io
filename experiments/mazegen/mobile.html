@@ -16,16 +16,20 @@
 		</div>
 		<div class="gameWrapper">
 			<div class="gameOverlay">
-				<span class="showScore" id="congratsSpan"></span>
-				<span class="showScore" id="scoreSpan1"></span>
-				<span class="showScore" id="scoreNumberSpan"></span>
-				<span class="showScore" id="scoreSpan2"></span>
+				<div class="centered">
+					<span   class="showScore initiallyHiddenBlock" id="congratsSpan"></span>
+					<span   class="showScore initiallyHiddenBlock" id="scoreSpan1"></span>
+					<span   class="showScore initiallyHiddenBlock" id="scoreNumberSpan"></span>
+					<span   class="showScore initiallyHiddenBlock" id="scoreSpan2"></span>
+					<div class="showScore initiallyHiddenInlineBlock fancyButton" id="scoreContinueButton">Continue</div>
+				</div>
 			</div>
 			<canvas id="mainCanvas"></canvas>
 		</div>
 	</div>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.3.10/seedrandom.min.js"></script>
+
 	<script type="text/javascript" src="mobile.js"></script>
 </body>
 </html>
