@@ -1,13 +1,80 @@
+* {
+	font-family: 'Roboto', 'Noto', sans-serif;
+	font-size: 30px;
+}
+
 body {
 	margin: 0px;
 	overscroll-behavior: none;
 	overflow: hidden
 }
 
-#mainCanvas {
+.wrapper {
 	position: fixed;
-	display: block;
 	height: 100%;
 	width: 100%;
 }
 
+.headerbar {
+	height: 60px;
+	background-color: #00BCD4;
+	position: relative;
+}
+
+.title {
+	position: absolute;
+	bottom: 0;
+	color: hsla(0,0%,100%,.87);
+	font-size: 35px;
+	margin:10px;
+}
+
+.gameWrapper {
+	width: 100%;
+	position: absolute;
+	top: 60px;
+	bottom: 0;
+}
+
+#mainCanvas {
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	z-index: auto;
+}
+
+.gameOverlay {
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	z-index: 1;
+	pointer-events: none;
+}
+
+.gameOverlay * {
+	pointer-events: auto;
+}
+
+.showScore {
+	text-align: center;
+	display:block;
+}
+
+#congratsSpan {
+	font-size: 50px;
+	margin-top: 20vh;
+	margin-bottom: 10vh;
+}
+
+#scoreNumberSpan {
+	font-size: 60px;
+	font-weight: bold;
+}
+
+.settingsIcon {
+	float:right;
+	stroke: hsla(0,0%,100%,.87);
+	width: 30px;
+	height: 30px;
+	margin: 15px;
+}

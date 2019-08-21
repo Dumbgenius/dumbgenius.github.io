@@ -9,6 +9,18 @@ const CELL_SIZE_TARGET = 45
 const MAX_MAZE_DIMENSION = 20
 const MAX_ACCEPTABLE_DIMENSION_PROPORTION = 1.3
 
+const TAP_DURATION = 500 //milliseconds
+const DEBOUNCE_DURATION = 5 //milliseconds
+
+const COMPLETION_MESSAGES = [
+	"Nice!",
+	"Excellent!",
+	"Awesome!",
+	"Great!",
+	"Fantastic!"
+]
+
+
 const DIRNAMES = ["N", "E", "S", "W"]
 const DIRS = {
 	"N":0b0001, 
@@ -42,6 +54,28 @@ function shuffled(l, rng = Math.random) {
     	n.push(li.splice(Math.floor(rng()*li.length),1)[0])
     }
     return n
+}
+
+function pickRandom(arr, rng = Math.random) {
+	return arr[Math.floor(rng() * arr.length)]
+}
+
+function round(value, decimals=0) {
+  return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
+}
+
+function getTotalOffset(e) {
+	var totalOffsetX = 0;
+	var totalOffsetY = 0;
+	var currentElement = e.target;
+
+	do {
+	    totalOffsetX += currentElement.offsetLeft - currentElement.scrollLeft;
+	    totalOffsetY += currentElement.offsetTop - currentElement.scrollTop;
+	}
+	while(currentElement = currentElement.offsetParent)
+
+	return {x:totalOffsetX, y:totalOffsetY}
 }
 
 function resizeCanvasToDisplaySize(canvas) {
@@ -194,7 +228,11 @@ Game = {}
 Game.path = [[0,0]]
 Game.mazeDrawn = false
 Game.dragging = false
-Game.state = "starting"
+Game.state = ""
+Game.states = {}
+Game.clickStartTime = Date.now()
+Game.clickStartX = 0
+Game.clickStartY = 0
 
 Game.newMaze = function() {
 	var width = Math.floor(this.canvas.width/CELL_SIZE_TARGET)
@@ -217,27 +255,43 @@ Game.newMaze = function() {
 }
 
 Game.update = function() {
-	if (this.state == "starting") {
-		this.transitionStartTime = Date.now()
-		this.newMaze()
-		this.state = "maze"
+	// var now = Date.now()
+	this.states[this.state].update(this)
+}
+
+Game.registerState = function(name, enterFunction, updateFunction, leaveFunction) {
+	//allow null in place of a function
+	if (enterFunction === null) {
+		enterFunction = function(thisRef) {}
 	}
-	if (this.state == "maze") {
-		this.goalX = this.maze.width-1
-		this.goalY = this.maze.height-1
-		var lastPath = this.path[this.path.length-1]
-		if (lastPath[0] == this.goalX && lastPath[1] == this.goalY) {
-			this.state = "transition1"
-			this.transitionStartTime = Date.now()
-		}
+	if (updateFunction === null) {
+		updateFunction = function(thisRef) {}
+	} 
+	if (leaveFunction === null) {
+		leaveFunction = function(thisRef) {}
 	}
-	if (this.state == "transition1") {
-		if (Date.now() - this.transitionStartTime > 1000) {
-			this.newMaze()
-			this.state = "maze"
-			this.transitionStartTime = Date.now()
-		}
+	//check for duplicates
+	if (this.states[name] !== undefined) {
+		throw new Error("State " + name + "already exists")
+		return false
 	}
+	//actually register the state
+	this.states[name] = {enter:enterFunction, update:updateFunction, leave:leaveFunction}
+	return true
+}
+
+Game.changeState = function(newState) {
+	console.log(this.state + "->" + newState)
+
+	if (this.states[name] === undefined) {
+		throw new Error("State " + newState + "does not exist")
+		return false
+	}
+	this.states[this.state].leave(this)
+	this.states[newState].enter(this)
+	this.state = newState
+	this.lastChangedState = Date.now()
+	return true
 }
 
 Game.draw = function() {
@@ -245,7 +299,7 @@ Game.draw = function() {
 		this.resize()
 	}
 
-	if (this.state == "maze" || this.state == "transition1") {
+	if (this.state == "maze" || this.state == "mazeComplete") {
 		if (!this.mazeDrawn) {
 			this.maze.draw(this.mazeCanvas)
 			this.mazeDrawn = true
@@ -279,7 +333,7 @@ Game.draw = function() {
 
 		ctx.fillStyle = PATH_COLOUR
 		ctx.beginPath()
-		ctx.arc(this.CELL_WIDTH/2, this.CELL_HEIGHT/2, this.CELL_SIZE/3.1, 0, 2*Math.PI)
+		ctx.arc(this.path[0][0]*this.CELL_WIDTH+this.CELL_WIDTH/2, this.path[0][1]*this.CELL_HEIGHT+this.CELL_HEIGHT/2, this.CELL_SIZE/3.1, 0, 2*Math.PI)
 		ctx.fill()
 		ctx.closePath()
 
@@ -290,11 +344,14 @@ Game.draw = function() {
 		ctx.fill()
 		ctx.closePath()
 
-		if (this.state == "transition1") {
+		if (this.state == "mazeComplete") {
 			ctx.strokeStyle = GOAL_COLOUR
 			ctx.fillStyle = FLOOR_COLOUR
 
-			var sizeAdd = Math.max(this.canvas.height, this.canvas.width) * ((Date.now() - this.transitionStartTime)/1000) * ((Date.now() - this.transitionStartTime)/1000) * 1.6
+			var elapsedSeconds = (Date.now() - this.lastChangedState)/1000
+
+			var canvasDiag = Math.sqrt(this.canvas.height*this.canvas.height + this.canvas.width*this.canvas.width)
+			var sizeAdd = canvasDiag * elapsedSeconds * elapsedSeconds * 2
 			var sizeFactor = (sizeAdd / (this.CELL_SIZE)) + 1;
 
 			ctx.lineWidth = sizeFactor*Math.min(this.CELL_WIDTH/5, this.CELL_HEIGHT/5)
@@ -305,7 +362,7 @@ Game.draw = function() {
 			ctx.closePath()
 		}
 		else {
-			var fadeInAlpha = 1.0-((Date.now()-this.transitionStartTime)/250)
+			var fadeInAlpha = 1.0-((Date.now()-this.lastChangedState)/250)
 			if (fadeInAlpha>0) {
 				ctx.fillStyle = FLOOR_COLOUR
 				ctx.globalAlpha = fadeInAlpha
@@ -316,7 +373,24 @@ Game.draw = function() {
 	}
 }
 
+Game.tap = function(x, y) {
+	if (this.state == "maze") {
+		var cellX = Math.floor(x/this.CELL_WIDTH)
+		var cellY = Math.floor(y/this.CELL_HEIGHT)
+
+		for (var i=0; i<this.path.length; i++) {
+			if (cellX == this.path[i][0] && cellY == this.path[i][1]) {
+				this.path.splice(i+1, this.path.length) //cut off the rest of the path
+			}
+		}
+	}
+}
+
 Game.mousedown = function(x, y) {
+	this.clickStartTime = Date.now()
+	this.clickStartX = x
+	this.clickStartY = y
+
 	var cellX = Math.floor(x/this.CELL_WIDTH)
 	var cellY = Math.floor(y/this.CELL_HEIGHT)
 
@@ -329,6 +403,16 @@ Game.mousedown = function(x, y) {
 
 Game.mouseup = function(x, y) {
 	this.dragging = false
+	var tapDuration = Date.now()-this.clickStartTime
+	if (tapDuration < TAP_DURATION && tapDuration > DEBOUNCE_DURATION) {
+		var cellX = Math.floor(x/this.CELL_WIDTH)
+		var cellY = Math.floor(y/this.CELL_HEIGHT)
+		var startCellX = Math.floor(this.clickStartX/this.CELL_WIDTH)
+		var startCellY = Math.floor(this.clickStartY/this.CELL_HEIGHT)
+		if (cellX == startCellX && cellY == startCellY) {
+			this.tap(x, y)
+		}
+	}
 }
 
 Game.mousemove = function(x, y) {
@@ -365,12 +449,71 @@ Game.resize = function() { //TODO: make this detect if it's actually an orientat
 	this.mazeCanvas.height = this.canvas.height
 	this.mazeDrawn = false
 
-	this.CELL_WIDTH = this.canvas.width/this.maze.width;
-	this.CELL_HEIGHT = this.canvas.height/this.maze.height;
-	if (this.CELL_WIDTH/this.CELL_HEIGHT > MAX_ACCEPTABLE_DIMENSION_PROPORTION || this.CELL_HEIGHT/this.CELL_WIDTH > MAX_ACCEPTABLE_DIMENSION_PROPORTION) {
-		this.state = "starting" //restart, it's gonna look horrible
+	if (this.maze !== undefined) {
+		this.CELL_WIDTH = this.canvas.width/this.maze.width;
+		this.CELL_HEIGHT = this.canvas.height/this.maze.height;
+		if (this.CELL_WIDTH/this.CELL_HEIGHT > MAX_ACCEPTABLE_DIMENSION_PROPORTION || this.CELL_HEIGHT/this.CELL_WIDTH > MAX_ACCEPTABLE_DIMENSION_PROPORTION) {
+			this.changeState("startup") //restart, it's gonna look horrible
+		}
 	}
 }
+
+
+/***************/
+/* GAME STATES */
+/***************/
+
+Game.registerState("",
+	null,
+	null,
+	null)
+
+Game.registerState("startup", 
+	null,
+	function(thisRef) {
+		thisRef.resize()
+		thisRef.changeState("maze")
+	},
+	null)
+
+Game.registerState("maze", 
+	function(thisRef) {
+		thisRef.newMaze()
+		thisRef.mazeStartedTime = Date.now()
+
+		thisRef.goalX = thisRef.maze.width-1
+		thisRef.goalY = thisRef.maze.height-1
+	},
+	function(thisRef) {
+		var lastPath = thisRef.path[thisRef.path.length-1]
+		if (lastPath[0] == thisRef.goalX && lastPath[1] == thisRef.goalY) {
+			thisRef.changeState("mazeComplete")
+		}
+	},
+	null)
+
+Game.registerState("mazeComplete",
+	null,
+	function(thisRef) {
+		var now = Date.now()
+		if (now - thisRef.lastChangedState > 1000) {
+			thisRef.mazeTimeTaken = now - thisRef.mazeStartedTime
+			thisRef.changeState("showScore")
+		}
+	},
+	null)
+
+Game.registerState("showScore",
+	function(thisRef) {
+		$(".showScore").fadeIn()
+		$("#congratsSpan").html(pickRandom(COMPLETION_MESSAGES))
+		$("#scoreSpan1").html("Finished in")
+		$("#scoreNumberSpan").html(round(thisRef.mazeTimeTaken/1000, 1))
+		$("#scoreSpan2").html("seconds")
+	},
+	null,
+	null)
+
 
 /********************/
 /* LET'S GET GAMING */
@@ -378,16 +521,16 @@ Game.resize = function() { //TODO: make this detect if it's actually an orientat
 
 Game.canvas = document.getElementById("mainCanvas")
 Game.mazeCanvas = document.createElement("canvas")
+Game.changeState("startup")
 Game.update()
-Game.resize()
 
 setInterval(function() {Game.update()}, 1000/60)
 setInterval(function() {Game.draw()}, 1000/60)
 
-Game.canvas.addEventListener("touchstart", function(e) {Game.mousedown(e.changedTouches[0].clientX, e.changedTouches[0].clientY)})
-Game.canvas.addEventListener("touchmove",  function(e) {Game.mousemove(e.changedTouches[0].clientX, e.changedTouches[0].clientY)})
-Game.canvas.addEventListener("touchend",   function(e) {Game.mouseup  (e.changedTouches[0].clientX, e.changedTouches[0].clientY)})
-Game.canvas.addEventListener("mousedown",  function(e) {Game.mousedown(e.clientX, e.clientY)})
-Game.canvas.addEventListener("mousemove",  function(e) {Game.mousemove(e.clientX, e.clientY)})
-Game.canvas.addEventListener("mouseup",    function(e) {Game.mouseup  (e.clientX, e.clientY)})
+Game.canvas.addEventListener("touchstart", function(e) {var offset=getTotalOffset(e); Game.mousedown(e.changedTouches[0].clientX - offset.x, e.changedTouches[0].clientY - offset.y);})
+Game.canvas.addEventListener("touchmove",  function(e) {var offset=getTotalOffset(e); Game.mousemove(e.changedTouches[0].clientX - offset.x, e.changedTouches[0].clientY - offset.y);})
+Game.canvas.addEventListener("touchend",   function(e) {var offset=getTotalOffset(e); Game.mouseup  (e.changedTouches[0].clientX - offset.x, e.changedTouches[0].clientY - offset.y);})
+Game.canvas.addEventListener("mousedown",  function(e) {var offset=getTotalOffset(e); Game.mousedown(e.clientX - offset.x, e.clientY - offset.y)})
+Game.canvas.addEventListener("mousemove",  function(e) {var offset=getTotalOffset(e); Game.mousemove(e.clientX - offset.x, e.clientY - offset.y)})
+Game.canvas.addEventListener("mouseup",    function(e) {var offset=getTotalOffset(e); Game.mouseup  (e.clientX - offset.x, e.clientY - offset.y)})
 Game.canvas.addEventListener("resize", function(e) {Game.resize()})
