@@ -595,3 +595,7 @@ $(".initiallyHiddenInlineBlock").css("display", "inline-block").hide()
 ButtonManager.registerButton("scoreContinueButton", function() {Game.changeState("transitionScoreToMaze")})
 $("#scoreContinueButton").on("mousedown touchstart", function() {ButtonManager.down("scoreContinueButton")})
 $("#scoreContinueButton").on("mouseup touchend", function() {ButtonManager.up("scoreContinueButton")})
+
+ButtonManager.registerButton("refreshButton", function() {Game.changeState("startup")})
+$(".settingsIcon").on("mousedown touchstart", function() {ButtonManager.down("scoreContinueButton")})
+$(".settingsIcon").on("mouseup touchend", function() {ButtonManager.up("scoreContinueButton")})
