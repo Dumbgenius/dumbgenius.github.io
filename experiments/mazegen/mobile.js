@@ -2,11 +2,12 @@
 // - animate the path so it move smoothly between cells
 // - make the settings wheel actually work
 //		- maze wiggliness: prob of random = (1-wiggliness)^1.5ish?
-//		- change colours
+//		- change colours (DARK MODE DARK MODE)
 //		- change cell size (with preview, preferably)
 //		- reset high score
-// - make the maze time taken timer only start when you start dragging
+// - make the maze time taken timer only start when you start dragging?? maybe?
 // - figure out how to make the maze timer stop timing when the window loses focus
+// - add a reload button
 
 
 const WALL_COLOUR = "#000000"
