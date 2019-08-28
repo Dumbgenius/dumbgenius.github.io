@@ -24,22 +24,52 @@ p {
 }
 
 a {
-	color:#10d010;
-	font-family:courier;
 	text-decoration:none;
+	color:inherit;
 }
 
-a:hover {
+.greenLink {
+	color:#10d010;
+	font-family:courier;
+}
+
+.greenLink:hover {
 	color:#10ff10;
 }
 
-td {
-	padding:10px;
+.ns-wrapper {
+	text-align: center;
+	width: 90vw;
+	max-width: 1000px;
+	margin: auto;
+}
+
+.ns-item {
+	width: 300px;
+	height: 300px;
+	max-width: 85vw; 
+	max-height: 85vw; 
+	display: inline-block;
+	padding: 10px;
+	margin: 0px;
+}
+
+.center-text {
+	display: table-cell;
+	vertical-align: middle;
+	width: 300px;
+	height: 270px;
+	max-width: 85vw; 
+	max-height: 80vw; 
 }
 
 .nicesquare {
+	display: table;
+	position: absolute;
 	width: 300px;
 	height: 300px;
+	max-width: 85vw; 
+	max-height: 85vw; 
 	box-sizing: border-box;
 	border: 3px solid #000000;
 	-webkit-transition: all 0.3s ease;
@@ -54,11 +84,6 @@ td {
 	border: 8px solid #F1F1F1;
 }
 
-div.centered {
-	vertical-align: middle;
-	text-align:center;
-}
-
 #maze {
 	background-color: #00BCD4;
 	color: hsla(0,0%,100%,.87);
@@ -66,4 +91,16 @@ div.centered {
 	font-size: 75px;
 	font-weight: bold;
 	display:table-cell;
+	vertical-align: middle;
+	text-align:center;
+}
+
+#experiments {
+	background-color: #DDD;
+	color: #111;
+	font-family: 'Impact';
+	font-size: 65px;
+	display:table-cell;
+	vertical-align: middle;
+	text-align:center;
 }
