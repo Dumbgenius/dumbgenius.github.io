@@ -34,15 +34,39 @@ a {
 	text-decoration:none;
 }
 
-td {
-	padding:10px;
+.ns-wrapper {
+	text-align: center;
+	width: 90vw;
+	max-width: 1000px;
+	margin: auto;
+}
+
+.ns-item {
+	width: 300px;
+	height: 300px;
+	max-width: 85vw; 
+	max-height: 85vw; 
+	display: inline-block;
+	padding: 10px;
+	margin: 0px;
+}
+
+.center-text {
+	display: table-cell;
+	vertical-align: middle;
+	width: 300px;
+	height: 270px;
+	max-width: 85vw; 
+	max-height: 80vw; 
 }
 
 .nicesquare {
+	display: table;
+	position: absolute;
 	width: 300px;
 	height: 300px;
-    display: table-cell;
-    vertical-align: middle;
+	max-width: 85vw; 
+	max-height: 85vw; 
 	box-sizing: border-box;
 	border: 3px solid #000000;
 	-webkit-transition: all 0.3s ease;
@@ -50,24 +74,12 @@ td {
 	transition: all 0.3s ease;
 	cursor: pointer;
 	border-radius: 50%;
-	text-decoration:none;
 }
 
 .nicesquare:hover {
 	border-radius: 25%;
 	border: 8px solid #F1F1F1;
 	font-size:34px;
-}
-
-div.centered {
-	vertical-align: middle;
-	text-align:center;
-}
-
-span.centered {
-	vertical-align: middle;
-	line-height: normal;
-	display:inline-block;
 }
 
 #caves {
@@ -117,9 +129,13 @@ span.centered {
 	font-size:62px;
 }
 
+a {
+	text-decoration:none;
+	color: inherit;
+}
+
 #backlink {
 	color:#10d010;
 	font-family:courier;
-	text-decoration:none;
 	font-size:20pt
 }
