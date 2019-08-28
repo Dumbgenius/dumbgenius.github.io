@@ -7,7 +7,6 @@
 //		- reset high score
 // - make the maze time taken timer only start when you start dragging?? maybe?
 // - figure out how to make the maze timer stop timing when the window loses focus
-// - add a reload button
 
 
 const WALL_COLOUR = "#000000"
@@ -101,6 +100,20 @@ function resizeCanvasToDisplaySize(canvas) {
    }
 
    return false;
+}
+
+function beautifySeconds(seconds, precision=1) {
+	var out = ""
+	if (seconds>3600) {
+		out += String(Math.floor(seconds/3600)) + "h "
+		seconds %= 3600
+	}
+	if (seconds>60) {
+		out += String(Math.floor(seconds/60)) + "m "
+		seconds %= 60
+	}
+	out += String(seconds.toFixed(precision)) + "s"
+	return out
 }
 
 /**************************/
@@ -515,9 +528,8 @@ Game.registerState("showScore",
 	function(thisRef) {
 		$(".showScore").fadeIn()
 		$("#congratsSpan").html(pickRandom(COMPLETION_MESSAGES))
-		$("#scoreSpan1").html("Finished in")
-		$("#scoreNumberSpan").html((thisRef.mazeTimeTaken/1000).toFixed(1))
-		$("#scoreSpan2").html("seconds")
+		$("#scoreSpan").html("Finished in")
+		$("#scoreNumberSpan").html(beautifySeconds(thisRef.mazeTimeTaken/1000))
 	},
 	null,
 	function(thisRef) {
