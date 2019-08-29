@@ -1,22 +1,44 @@
 //TODO LIST:
 // - animate the path so it move smoothly between cells
-// - make the settings wheel actually work
-//		- maze wiggliness: prob of random = (1-wiggliness)^1.5ish?
-//		- change colours (DARK MODE DARK MODE)
-//		- change cell size (with preview, preferably)
-//		- reset high score
+// - maze wiggliness: prob of random = (1-wiggliness)^1.5ish?
+// - change colours (DARK MODE DARK MODE)
+// - change cell size (with preview, preferably)
+// - reset high score
 // - make the maze time taken timer only start when you start dragging?? maybe?
 // - figure out how to make the maze timer stop timing when the window loses focus
 
 
-const WALL_COLOUR = "#000000"
-const FLOOR_COLOUR = "#FFFFFF"
-const PATH_COLOUR = "#8c1db5"
-const GOAL_COLOUR = "#8c1db5"
-const END_COLOUR = "#df03fc"
+WALL_COLOUR = "#000000"
+FLOOR_COLOUR = "#FFFFFF"
+PATH_COLOUR = "#8c1db5"
+GOAL_COLOUR = "#8c1db5"
+END_COLOUR = "#df03fc"
 
-const MAZEGEN_PROB_OF_RANDOM = 0.1
-const CELL_SIZE_TARGET = 45
+MAZEGEN_PROB_OF_RANDOM = 0.1
+CELL_SIZE_TARGET = 45
+
+DARK_MODE = false //TODO: have this save over reloads
+
+const LIGHT_MODE_COLOURS = {
+	wall: "#000000",
+	floor: "#FFFFFF",
+	path: "#8c1db5",
+	goal: "#8c1db5",
+	end: "#df03fc",
+	header: "#00BCD4",
+	text: "#000000",
+}
+
+const DARK_MODE_COLOURS = {
+	wall: "#EEEEEE",
+	floor: "#111111",
+	path: "#8c1db5",
+	goal: "#8c1db5",
+	end: "#df03fc",
+	header: "#00BCD4",
+	text: "hsla(0,0%,100%,.87)",
+}
+
 const MAX_MAZE_DIMENSION = 20
 const MAX_ACCEPTABLE_DIMENSION_PROPORTION = 1.3
 
@@ -316,6 +338,7 @@ Game.registerState = function(name, enterFunction=null, updateFunction=null, lea
 }
 
 Game.changeState = function(newState, supressTimeChange = false) {
+	console.log(this.getState(), "->", newState)
 	if (this.states[name] === undefined) {
 		throw new Error("State " + newState + "does not exist")
 		return false
@@ -364,7 +387,7 @@ Game.draw = function() {
 		this.resize()
 	}
 
-	if (this.getState() == "maze" || this.getState() == "mazeComplete") {
+	if (this.stateStack.includes("maze") || this.getState() == "mazeComplete") {
 		if (!this.mazeDrawn) {
 			this.maze.draw(this.mazeCanvas)
 			this.mazeDrawn = true
@@ -697,3 +720,28 @@ ButtonManager.registerButton("leaveSettingsButton", function() {
 })
 $("#leaveSettingsButton").on("mousedown touchstart", function() {ButtonManager.down("leaveSettingsButton")})
 $("#leaveSettingsButton").on("mouseup touchend", function() {ButtonManager.up("leaveSettingsButton")})
+
+
+ButtonManager.registerButton("toggleDarkModeButton", function() {
+	DARK_MODE = !DARK_MODE
+	if (DARK_MODE) {
+		var colour_scheme = DARK_MODE_COLOURS		
+	} else {
+		var colour_scheme = LIGHT_MODE_COLOURS		
+	}
+
+	WALL_COLOUR =  colour_scheme["wall"]
+	FLOOR_COLOUR = colour_scheme["floor"]
+	PATH_COLOUR =  colour_scheme["path"]
+	GOAL_COLOUR =  colour_scheme["goal"]
+	END_COLOUR =   colour_scheme["end"]
+
+	$(".floor-colour").css("background-color", colour_scheme["floor"])
+	$(".header-colour").css("background-color", colour_scheme["header"])
+	$(".text-colour").css("color", colour_scheme["text"])
+
+	Game.mazeDrawn = false
+})
+
+$("#toggleDarkModeButton").on("mousedown touchstart", function() {ButtonManager.down("toggleDarkModeButton")})
+$("#toggleDarkModeButton").on("mouseup touchend", function() {ButtonManager.up("toggleDarkModeButton")})

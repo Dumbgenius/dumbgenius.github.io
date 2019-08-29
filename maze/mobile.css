@@ -3,6 +3,10 @@
 	font-size: 30px;
 }
 
+.text-colour {
+	color: #000;
+}
+
 .initiallyHiddenBlock, .initiallyHiddenInlineBlock {
 	display: none;
 }
@@ -21,8 +25,11 @@ body {
 
 .headerbar {
 	height: 60px;
-	background-color: #00BCD4;
 	position: relative;
+}
+
+.header-colour {
+	background-color: #00BCD4;
 }
 
 .title {
@@ -70,11 +77,11 @@ body {
 
 .fancyButton {
 	user-select: none;
-	background-color: #00BCD4;
 	padding: 15px;
 	border-radius: 10px;
 	margin: auto;
 	cursor: pointer;
+	color: hsla(0,0%,100%,.87);
 
 	transition: transform 150ms;
 }
@@ -86,8 +93,25 @@ body {
 	left: 5vmin;
 	right: 5vmin;
 	box-shadow: 1px 1px 3px 0px black;
-	background-color: #FCFCFC;
 	border-radius: 8px;
+}
+
+.settingsOverlay {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	background-color: #666d
+}
+
+.scoreOverlay {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	background-color: #666d
 }
 
 .fancyButton:hover {
@@ -113,8 +137,12 @@ body {
 	margin-top: 5vh;
 }
 
-#leaveSettingsButton {
+#toggleDarkModeButton {
 	margin-top: 5vh;
+	margin-bottom: 5vh;
+}
+
+#leaveSettingsButton {
 	margin-bottom: 5vh;
 }
 
@@ -124,4 +152,8 @@ body {
 	width: 30px;
 	height: 30px;
 	margin: 15px;
+}
+
+.floor-colour {
+	background-color: #FFFFFF;
 }
