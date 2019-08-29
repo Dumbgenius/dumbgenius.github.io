@@ -73,11 +73,21 @@ body {
 	background-color: #00BCD4;
 	padding: 15px;
 	border-radius: 10px;
-	margin: auto
-	box-shadow: 1px 1px 3px 0px black;
+	margin: auto;
 	cursor: pointer;
 
 	transition: transform 150ms;
+}
+
+.settingsPanel {
+	position: absolute;
+	top: 5vmin;
+	bottom: 5vmin;
+	left: 5vmin;
+	right: 5vmin;
+	box-shadow: 1px 1px 3px 0px black;
+	background-color: #FCFCFC;
+	border-radius: 8px;
 }
 
 .fancyButton:hover {
@@ -103,7 +113,12 @@ body {
 	margin-top: 5vh;
 }
 
-.settingsIcon {
+#leaveSettingsButton {
+	margin-top: 5vh;
+	margin-bottom: 5vh;
+}
+
+.header-icon {
 	float:right;
 	stroke: hsla(0,0%,100%,.87);
 	width: 30px;

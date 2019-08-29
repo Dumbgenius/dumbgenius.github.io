@@ -251,8 +251,8 @@ Game = {}
 Game.path = [[0,0]]
 Game.mazeDrawn = false
 Game.dragging = false
-Game.state = ""
 Game.states = {}
+Game.stateStack = [""]
 Game.clickStartTime = Date.now()
 Game.clickStartX = 0
 Game.clickStartY = 0
@@ -279,10 +279,10 @@ Game.newMaze = function() {
 
 Game.update = function() {
 	// var now = Date.now()
-	this.states[this.state].update(this)
+	this.states[this.getState()].update(this)
 }
 
-Game.registerState = function(name, enterFunction, updateFunction, leaveFunction) {
+Game.registerState = function(name, enterFunction=null, updateFunction=null, leaveFunction=null, poppedIntoFunction=null, pushedOutFunction=null) {
 	//allow null in place of a function
 	if (enterFunction === null) {
 		enterFunction = function(thisRef) {}
@@ -293,26 +293,70 @@ Game.registerState = function(name, enterFunction, updateFunction, leaveFunction
 	if (leaveFunction === null) {
 		leaveFunction = function(thisRef) {}
 	}
+	if (poppedIntoFunction === null) {
+		poppedIntoFunction = function(thisRef) {}
+	}
+	if (pushedOutFunction === null) {
+		pushedOutFunction = function(thisRef) {}
+	}
 	//check for duplicates
 	if (this.states[name] !== undefined) {
 		throw new Error("State " + name + "already exists")
 		return false
 	}
 	//actually register the state
-	this.states[name] = {enter:enterFunction, update:updateFunction, leave:leaveFunction}
+	this.states[name] = {
+		enter:enterFunction,
+		update:updateFunction,
+		leave:leaveFunction,
+		poppedInto:poppedIntoFunction,
+		pushedOut:pushedOutFunction
+	}
 	return true
 }
 
-Game.changeState = function(newState) {
+Game.changeState = function(newState, supressTimeChange = false) {
 	if (this.states[name] === undefined) {
 		throw new Error("State " + newState + "does not exist")
 		return false
 	}
-	this.states[this.state].leave(this)
+	this.states[this.getState()].leave(this)
 	this.states[newState].enter(this)
-	this.state = newState
-	this.lastChangedState = Date.now()
+
+	this.stateStack.pop()
+	this.stateStack.push(newState)
+
+	if (!supressTimeChange) {
+		this.lastChangedState = Date.now()
+	}
+	this.update()
 	return true
+}
+
+Game.pushState = function(newState) {
+	if (this.states[newState] === undefined) {
+		throw new Error("State " + newState + "does not exist")
+		return false
+	}
+	this.states[this.getState()].pushedOut(this)
+	this.stateStack.push(newState)
+	this.states[newState].enter(this)
+	this.update()
+}
+
+Game.popState = function(name) {
+	this.states[this.getState()].leave(this)
+	this.stateStack.pop()
+	this.states[this.getState()].poppedInto(this)
+	this.update()
+}
+
+Game.getState = function() {
+	if (this.stateStack.length == 0) {
+		console.log("Warning! State stack was empty, replacing with empty state.")
+		this.stateStack = [""] //safeguard
+	}
+	return this.stateStack[this.stateStack.length-1]
 }
 
 Game.draw = function() {
@@ -320,7 +364,7 @@ Game.draw = function() {
 		this.resize()
 	}
 
-	if (this.state == "maze" || this.state == "mazeComplete") {
+	if (this.getState() == "maze" || this.getState() == "mazeComplete") {
 		if (!this.mazeDrawn) {
 			this.maze.draw(this.mazeCanvas)
 			this.mazeDrawn = true
@@ -365,7 +409,7 @@ Game.draw = function() {
 		ctx.fill()
 		ctx.closePath()
 
-		if (this.state == "mazeComplete") {
+		if (this.getState() == "mazeComplete") {
 			ctx.strokeStyle = GOAL_COLOUR
 			ctx.fillStyle = FLOOR_COLOUR
 
@@ -395,7 +439,7 @@ Game.draw = function() {
 }
 
 Game.tap = function(x, y) {
-	if (this.state == "maze") {
+	if (this.getState() == "maze") {
 		var cellX = Math.floor(x/this.CELL_WIDTH)
 		var cellY = Math.floor(y/this.CELL_HEIGHT)
 
@@ -412,13 +456,15 @@ Game.mousedown = function(x, y) {
 	this.clickStartX = x
 	this.clickStartY = y
 
-	var cellX = Math.floor(x/this.CELL_WIDTH)
-	var cellY = Math.floor(y/this.CELL_HEIGHT)
-
-	var lastPath = this.path[this.path.length-1]
-
-	if (cellX == lastPath[0] && cellY == lastPath[1]) {
-		this.dragging = true
+	if (this.getState() == "maze") {
+		var cellX = Math.floor(x/this.CELL_WIDTH)
+		var cellY = Math.floor(y/this.CELL_HEIGHT)
+	
+		var lastPath = this.path[this.path.length-1]
+	
+		if (cellX == lastPath[0] && cellY == lastPath[1]) {
+			this.dragging = true
+		}
 	}
 }
 
@@ -426,38 +472,42 @@ Game.mouseup = function(x, y) {
 	this.dragging = false
 	var tapDuration = Date.now()-this.clickStartTime
 	if (tapDuration < TAP_THRESHOLD && tapDuration > DEBOUNCE_DURATION) {
-		var cellX = Math.floor(x/this.CELL_WIDTH)
-		var cellY = Math.floor(y/this.CELL_HEIGHT)
-		var startCellX = Math.floor(this.clickStartX/this.CELL_WIDTH)
-		var startCellY = Math.floor(this.clickStartY/this.CELL_HEIGHT)
-		if (cellX == startCellX && cellY == startCellY) {
-			this.tap(x, y)
+		if (this.getState() == "maze") {
+			var cellX = Math.floor(x/this.CELL_WIDTH)
+			var cellY = Math.floor(y/this.CELL_HEIGHT)
+			var startCellX = Math.floor(this.clickStartX/this.CELL_WIDTH)
+			var startCellY = Math.floor(this.clickStartY/this.CELL_HEIGHT)
+			if (cellX == startCellX && cellY == startCellY) {
+				this.tap(x, y)
+			}
 		}
 	}
 }
 
 Game.mousemove = function(x, y) {
-	var cellX = Math.floor(x/this.CELL_WIDTH)
-	var cellY = Math.floor(y/this.CELL_HEIGHT)
-	if (this.dragging) {
-		var lastPath = this.path[this.path.length-1]
+	if (this.getState() == "maze") {
+		var cellX = Math.floor(x/this.CELL_WIDTH)
+		var cellY = Math.floor(y/this.CELL_HEIGHT)
+		if (this.dragging) {
+			var lastPath = this.path[this.path.length-1]
 
-		if (cellX != lastPath[0] || cellY != lastPath[1]) { //we've moved!
-			if (this.path.length >= 2) {
-				var lastButOne = this.path[this.path.length-2]
-				if (cellX == lastButOne[0] && cellY == lastButOne[1]) {
-					this.path.splice(this.path.length-1, 1) //we've gone backwards, remove the last bit of the path
-					// this.draw()
-					return true
+			if (cellX != lastPath[0] || cellY != lastPath[1]) { //we've moved!
+				if (this.path.length >= 2) {
+					var lastButOne = this.path[this.path.length-2]
+					if (cellX == lastButOne[0] && cellY == lastButOne[1]) {
+						this.path.splice(this.path.length-1, 1) //we've gone backwards, remove the last bit of the path
+						// this.draw()
+						return true
+					}
 				}
-			}
-			var adjacents = this.maze.listOpenAdjacents(lastPath[0], lastPath[1])
-			for (var i=0; i<adjacents.length; i++) {
-				if (cellX == adjacents[i][0] && cellY == adjacents[i][1]) {
-					//we've advanced! add it to the path
-					this.path.push(adjacents[i])
-					// this.draw()
-					return true
+				var adjacents = this.maze.listOpenAdjacents(lastPath[0], lastPath[1])
+				for (var i=0; i<adjacents.length; i++) {
+					if (cellX == adjacents[i][0] && cellY == adjacents[i][1]) {
+						//we've advanced! add it to the path
+						this.path.push(adjacents[i])
+						// this.draw()
+						return true
+					}
 				}
 			}
 		}
@@ -470,7 +520,7 @@ Game.resize = function() { //TODO: make this detect if it's actually an orientat
 	this.mazeCanvas.height = this.canvas.height
 	this.mazeDrawn = false
 
-	if (this.state == "maze") {
+	if (this.getState() == "maze") {
 		this.CELL_WIDTH = this.canvas.width/this.maze.width;
 		this.CELL_HEIGHT = this.canvas.height/this.maze.height;
 		if (this.CELL_WIDTH/this.CELL_HEIGHT > MAX_ACCEPTABLE_DIMENSION_PROPORTION || this.CELL_HEIGHT/this.CELL_WIDTH > MAX_ACCEPTABLE_DIMENSION_PROPORTION) {
@@ -484,27 +534,36 @@ Game.resize = function() { //TODO: make this detect if it's actually an orientat
 /* GAME STATES */
 /***************/
 
-Game.registerState("",
-	null,
-	null,
-	null)
+//NB: As a workaround, do not put state changes into the enter or leave functions.
+// TODO: Fix it so that having state changes in enter/leave functions works.
+
+Game.registerState("")
 
 Game.registerState("startup", 
 	null,
 	function(thisRef) {
 		thisRef.resize()
-		thisRef.changeState("maze")
+		thisRef.changeState("newMaze")
 	},
 	null)
 
-Game.registerState("maze", 
+Game.registerState("newMaze", 
+	null,
 	function(thisRef) {
 		thisRef.newMaze()
 		thisRef.mazeStartedTime = Date.now()
 
 		thisRef.goalX = thisRef.maze.width-1
 		thisRef.goalY = thisRef.maze.height-1
+
+		thisRef.changeState("maze")
 	},
+	null)
+
+
+
+Game.registerState("maze", 
+	null,
 	function(thisRef) {
 		var lastPath = thisRef.path[thisRef.path.length-1]
 		if (lastPath[0] == thisRef.goalX && lastPath[1] == thisRef.goalY) {
@@ -540,10 +599,19 @@ Game.registerState("transitionScoreToMaze",
 	null,
 	function(thisRef) {
 		if ($(".showScore").css("display") == "none") {
-			thisRef.changeState("maze")
+			thisRef.changeState("newMaze")
 		}
 	},
 	null)
+
+Game.registerState("settings",
+	function(thisRef) {
+		$(".settings").fadeIn()
+	},
+	null,
+	function(thisRef) {
+		$(".settings").fadeOut()
+	})
 
 /******************/
 /* BUTTON MANAGER */
@@ -609,5 +677,23 @@ $("#scoreContinueButton").on("mousedown touchstart", function() {ButtonManager.d
 $("#scoreContinueButton").on("mouseup touchend", function() {ButtonManager.up("scoreContinueButton")})
 
 ButtonManager.registerButton("refreshButton", function() {Game.changeState("startup")})
-$(".settingsIcon").on("mousedown touchstart", function() {ButtonManager.down("scoreContinueButton")})
-$(".settingsIcon").on("mouseup touchend", function() {ButtonManager.up("scoreContinueButton")})
+$("#reloadIcon").on("mousedown touchstart", function() {ButtonManager.down("refreshButton")})
+$("#reloadIcon").on("mouseup touchend", function() {ButtonManager.up("refreshButton")})
+
+ButtonManager.registerButton("settingsButton", function() {
+	if (Game.getState() != "settings") {
+		Game.pushState("settings")
+	} else {
+		Game.popState()
+	}
+})
+$("#settingsIcon").on("mousedown touchstart", function() {ButtonManager.down("settingsButton")})
+$("#settingsIcon").on("mouseup touchend", function() {ButtonManager.up("settingsButton")})
+
+ButtonManager.registerButton("leaveSettingsButton", function() {
+	if (Game.getState() == "settings") {
+		Game.popState()
+	}
+})
+$("#leaveSettingsButton").on("mousedown touchstart", function() {ButtonManager.down("leaveSettingsButton")})
+$("#leaveSettingsButton").on("mouseup touchend", function() {ButtonManager.up("leaveSettingsButton")})
